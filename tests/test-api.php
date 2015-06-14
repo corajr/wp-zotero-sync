@@ -10,7 +10,9 @@ class ApiTest extends WP_UnitTestCase {
             'apiKey' => '',
             'collectionKey' => 'IPJWZUAI',
         );
-		$this->assertTrue( true );
+
+        $items = $WP_Zotero_Sync_Plugin->getItems($config);
+		$this->assertEqual( 21, count($items) );
 	}
 }
 

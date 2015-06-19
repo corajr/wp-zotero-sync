@@ -12,8 +12,6 @@ Domain Path: /languages
 
 class WP_Zotero_Sync_Plugin {
     private static $instance = false;
-    private static $table_name = 'zotero-cache';
-    private static $db_version = '1.0';
     private static $libraries = array();
     
 	/**
@@ -22,7 +20,6 @@ class WP_Zotero_Sync_Plugin {
 	 * @return void
 	 */
     private function __construct() {
-        add_action('plugins_loaded', array($this, 'create_cache'));
     }
 
 	public static function get_instance() {
@@ -30,50 +27,6 @@ class WP_Zotero_Sync_Plugin {
 			self::$instance = new self;
 		return self::$instance;
 	}
-
-    public function create_cache() {
-        global $wpdb;
-        $installed_ver = get_option( "wp_zotero_sync_db_version" );
-        
-        if ( $installed_ver != static::$db_version ) {
-            $table_name = $wpdb->prefix . static::$table_name;
-            $charset_collate = $wpdb->get_charset_collate();
-
-            $sql = "CREATE TABLE $table_name (
-               id int NOT NULL AUTO_INCREMENT,
-               time datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
-               library_type varchar(5) NOT NULL,
-               library_id int NOT NULL,
-               api_key varchar(255) NOT NULL,
-               collection_key varchar(8) NOT NULL,
-               response longtext NOT NULL,
-               PRIMARY KEY (id),
-               UNIQUE KEY library_type_id_col (library_type, library_id, collection_key)
-               ) $charset_collate;";
-
-            require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-            dbDelta( $sql );
-
-            update_option( "wp_zotero_sync_db_version", $db_version );
-        }
-    }
-
-    public function get_from_db($config) {
-        global $wpdb;
-        $table_name = $wpdb->prefix . static::$table_name;
-
-        $sql = $wpdb->prepare("SELECT * FROM %s WHERE library_type = %s" .
-                              " AND library_id = %d" .
-                              " AND collection_key = %s",
-                              $table_name,
-                              $config['libraryType'],
-                              $config['libraryID'],
-                              $config['collectionKey']
-        );
-
-        $result = $wpdb->get_row($sql, ARRAY_A);
-        return $result;
-    }
 
     private function get_server_connection($config) {
         $lib_key = $config['libraryType'] . $config['libraryID'] . $config['collectionKey'];
@@ -94,12 +47,15 @@ class WP_Zotero_Sync_Plugin {
         return $library;
     }
 
-    private function get_items_on_server($config) {
+    public function get_items($config, $total_item_limit = -1) {
         $library = $this->get_server_connection($config);
 
-        $params = array('order' => 'title');
         $per_request_limit = 100;
-        $total_item_limit = -1;
+
+        $params = array(
+            'order' => 'title',
+            'limit' => $per_request_limit,
+        );
 
         $more_items = true;
         $fetched_items_count = 0;
@@ -109,7 +65,8 @@ class WP_Zotero_Sync_Plugin {
         while (($fetched_items_count < $total_item_limit || $total_item_limit == -1)
                && $more_items) {
             $fetched_items = $library->fetchItemsTop(
-                array_merge(params, array('limit'=>$per_request_limit, 'start'=>$offset)));
+                array_merge($params, array('start'=>$offset))
+            );
             $items = array_merge($items, $fetched_items);
             $fetched_items_count += count($fetched_items);
             $offset = $fetched_items_count;
@@ -118,10 +75,7 @@ class WP_Zotero_Sync_Plugin {
                 $more_items = false;
             }
         }
-    }
-
-    public function get_items($config) {
-        
+        return $items;
     }
 }
 

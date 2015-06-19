@@ -14,6 +14,7 @@ class WP_Zotero_Sync_Plugin {
     private static $instance = false;
     private static $table_name = 'zotero-cache';
     private static $db_version = '1.0';
+    private static $libraries = array();
     
 	/**
 	 * This is our constructor
@@ -57,7 +58,7 @@ class WP_Zotero_Sync_Plugin {
         }
     }
 
-    public function getFromDB($config) {
+    public function get_from_db($config) {
         global $wpdb;
         $table_name = $wpdb->prefix . static::$table_name;
 
@@ -74,10 +75,52 @@ class WP_Zotero_Sync_Plugin {
         return $result;
     }
 
-    private function apiCall($config) {
+    private function get_server_connection($config) {
+        $lib_key = $config['libraryType'] . $config['libraryID'] . $config['collectionKey'];
+
+        if (isset(static::$libraries[''])) {
+            $library = static::$libraries[$lib_key];
+        } else {
+            $library = new Zotero_Library(
+                $config['libraryType'],
+                $config['libraryID'],
+                $config['librarySlug'],
+                $config['collectionKey']
+            );
+            $library->setCacheTtl(1800);
+
+            static::$libraries[$lib_key] = $library;
+        }
+        return $library;
     }
 
-    public function getItems($config) {
+    private function get_items_on_server($config) {
+        $library = $this->get_server_connection($config);
+
+        $params = array('order' => 'title');
+        $per_request_limit = 100;
+        $total_item_limit = -1;
+
+        $more_items = true;
+        $fetched_items_count = 0;
+        $offset = 0;
+        $items = array();
+
+        while (($fetched_items_count < $total_item_limit || $total_item_limit == -1)
+               && $more_items) {
+            $fetched_items = $library->fetchItemsTop(
+                array_merge(params, array('limit'=>$per_request_limit, 'start'=>$offset)));
+            $items = array_merge($items, $fetched_items);
+            $fetched_items_count += count($fetched_items);
+            $offset = $fetched_items_count;
+
+            if(!isset($library->getLastFeed()->links['next'])){
+                $more_items = false;
+            }
+        }
+    }
+
+    public function get_items($config) {
         
     }
 }

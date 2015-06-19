@@ -3537,7 +3537,8 @@ class Zotero_Library
         
         $response = $this->_request($reqUrl);
         if($response->isError()){
-            throw new Exception("Error fetching items");
+            $text_response = $response->asString();
+            throw new Exception("Error fetching items: " . $text_response);
         }
         
         $feed = new Zotero_Feed($response->getRawBody());

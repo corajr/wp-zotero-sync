@@ -10,7 +10,8 @@ class ApiTest extends WP_UnitTestCase {
     );
 
 	function test_get_items_from_api() {
-        $items = $WP_Zotero_Sync_Plugin->getItems(static::$config);
+        global $WP_Zotero_Sync_Plugin;
+        $items = $WP_Zotero_Sync_Plugin->get_items(static::$config);
 		$this->assertEqual( 21, count($items) );
 	}
     

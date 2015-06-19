@@ -34,6 +34,7 @@ class WP_Zotero_Sync_Plugin {
         if (isset(static::$libraries[''])) {
             $library = static::$libraries[$lib_key];
         } else {
+            require_once( dirname(__FILE__) . '/libZoteroSingle.php' );
             $library = new Zotero_Library(
                 $config['libraryType'],
                 $config['libraryID'],

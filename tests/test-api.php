@@ -1,6 +1,7 @@
 <?php
 
 define("LIVE_API", false);
+define("NUM_ITEMS", 21);
 
 class ApiTest extends WP_UnitTestCase {
     public $users = array();
@@ -24,8 +25,9 @@ class ApiTest extends WP_UnitTestCase {
         );
 
         foreach ($user_args as $args) {
-            $this->users[$args['last_name']] = $this->factory->user->create( $args );
-        }        
+            $user = $this->factory->user->create_and_get( $args );
+            $this->users[$args['last_name']] = $user->user_nicename;
+        }
     }
 
     function get_config() {
@@ -40,17 +42,19 @@ class ApiTest extends WP_UnitTestCase {
     }
 
     function get_items() {
-        return unserialize( file_get_contents( 'tests/fixture_items.php' ) );
-    }
-
-	function test_get_items_from_api() {
         global $WP_Zotero_Sync_Plugin;
         if (LIVE_API) {
             $items = $WP_Zotero_Sync_Plugin->get_items( $this->get_config() );
         } else {
-            $items = $this->get_items();
+            $items = unserialize( file_get_contents( 'tests/fixture_items.php' ) );
         }
-		$this->assertEquals( 21, count($items) );
+        return $items;
+    }
+
+	function test_get_items_from_api() {
+        global $WP_Zotero_Sync_Plugin;
+        $items = $this->get_items();
+		$this->assertEquals( NUM_ITEMS, count($items) );
 	}
 
     function test_add_guest_author() {
@@ -78,7 +82,6 @@ class ApiTest extends WP_UnitTestCase {
         $author2 = $WP_Zotero_Sync_Plugin->get_or_create_wp_author( $args );
         $this->assertEquals( $author, $author2 );
     }
-
     
     function check_authors($item, $last_names) {
         global $WP_Zotero_Sync_Plugin;
@@ -94,7 +97,7 @@ class ApiTest extends WP_UnitTestCase {
                     $user = $WP_Zotero_Sync_Plugin->find_creator(
                         array('lastName' => $last_name)
                     );
-                    return $user->ID;
+                    return $user->user_nicename;
                 }
         }, $last_names);
 
@@ -136,8 +139,29 @@ class ApiTest extends WP_UnitTestCase {
         $this->assertEquals( 'SIQEK7CP', $book_section['meta']['wpcf-zotero-key'] );
         $this->assertEquals( 'Art History and Globalization', $book_section['title'] );
         $this->assertEquals( 'Is Art History Global', $book_section['meta']['wpcf-journal'] );
-        $this->assertEquals( 1, count($book_section['authors']) );
-        
+        $this->assertEquals( 1, count($book_section['authors']) );        
     }
+
+    function test_create_posts() {
+        global $WP_Zotero_Sync_Plugin;
+
+        $items = $this->get_items();
+        $post_items = $WP_Zotero_Sync_Plugin->convert_to_posts( $items );
+
+        $WP_Zotero_Sync_Plugin->create_posts( $post_items );
+
+        $args = array(
+            'post_type' => 'publication',
+        );
+
+        $publications = get_posts( $args );
+
+        $this->assertEquals( NUM_ITEMS, count($publications) );
+
+        $example = $publications[0];
+
+        $this->assertEquals( 'A lab of their own: Genomic sovereignty as postcolonial science policy', $example->post_title );
+    }
+    
 }
 

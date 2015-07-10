@@ -53,23 +53,27 @@ class ApiTest extends WP_UnitTestCase {
 		$this->assertEquals( 21, count($items) );
 	}
 
-    function check_author($item, $last_name) {
+    function check_authors($item, $last_names) {
         global $WP_Zotero_Sync_Plugin;
 
         $authors = $WP_Zotero_Sync_Plugin->get_wp_authors_for($item);
-        $this->assertEquals(1, count($authors));
 
-        $author = $authors[0];
-        $this->assertEquals( $this->users[$last_name], $author );
+        $users = $this->users;
+
+        $real_ids = array_map(function($last_name) use ($users) {
+                return $users[$last_name];
+        }, $last_names);
+
+        $this->assertEquals( $real_ids, $authors );
     }
 
     function test_get_wp_authors() {
         global $WP_Zotero_Sync_Plugin;
         $items = $this->get_items();
 
-        $this->check_authors($items[0], 'Benjamin');
-        $this->check_authors($items[1], 'Belcher');
-        $this->check_authors($items[2], 'Okeke-Agulu');
+        $this->check_authors($items[0], array('Benjamin'));
+        $this->check_authors($items[1], array('Belcher'));
+        $this->check_authors($items[2], array('Okeke-Agulu'));
     }
 
     function test_convert_items_to_posts() {
@@ -84,10 +88,10 @@ class ApiTest extends WP_UnitTestCase {
         $this->assertEquals( '2009', $article['meta']['wpcf-date'] );
         $this->assertEquals( 'Policy and Society', $article['meta']['wpcf-journal'] );
 
-        $this->assertFalse( array_key_exists( 'wpcf-editors', $article['meta'] ) );
-        $this->assertFalse( array_key_exists( 'wpcf-publisher', $article['meta'] ) );
+        $this->assertArrayNotHasKey( 'wpcf-editors', $article['meta'] );
+        $this->assertArrayNotHasKey( 'wpcf-publisher', $article['meta'] );
 
-        $this->assertTrue( array_key_exists( 'wpcf-citation', $article['meta'] ) );
+        $this->assertArrayHasKey( 'wpcf-citation', $article['meta'] );
 
         $book = $post_items[1];
         $this->assertEquals( "Abyssinia's Samuel Johnson: Ethiopian Thought in the Making of an English Author", $book['title'] );

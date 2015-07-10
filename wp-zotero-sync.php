@@ -80,10 +80,39 @@ class WP_Zotero_Sync_Plugin {
         return $items;
     }
 
+    public function get_wp_authors_of($item) {
+        $authors = array();
+        foreach ($item->creators as $creator) {
+            $authors[] = $author;
+        }
+        return $authors;
+    }
+
     public function convert_to_posts($items) {
         $posts = array();
         foreach ($items as $item) {
-            $posts[] = $item;
+            $post = array(
+                'title' => $item->title,
+                'dateUpdated' => $item->dateUpdated,
+                'meta' => array(
+                    'wpcf-date' => $item->year,
+                    'wpcf-zotero-key' => $item->itemKey,
+                    'wpcf-citation' => $item->bibContent,
+                ),
+            );
+
+            $api_obj = $item->apiObject;
+            if (isset($api_obj['publicationTitle'])) {                
+                $post['meta']['wpcf-journal'] = $api_obj['publicationTitle'];
+            }
+            if (isset($api_obj['publicationTitle'])) {                
+                $post['meta']['wpcf-journal'] = $api_obj['publicationTitle'];
+            }
+            if (isset($api_obj['publisher'])) {                
+                $post['meta']['wpcf-publisher'] = $api_obj['publisher'];
+            }
+
+            $posts[] = $post;
         }
         return $posts;
     }

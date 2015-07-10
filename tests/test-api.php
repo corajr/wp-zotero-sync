@@ -12,6 +12,10 @@ class ApiTest extends WP_UnitTestCase {
         return $config;
     }
 
+    function get_items() {
+        return unserialize( file_get_contents( 'tests/fixture_items.php' ) );
+    }
+
 	function test_get_items_from_api() {
         global $WP_Zotero_Sync_Plugin;
         $items = $WP_Zotero_Sync_Plugin->get_items( $this->get_config() );
@@ -20,7 +24,7 @@ class ApiTest extends WP_UnitTestCase {
 
     function test_convert_items_to_posts() {
         global $WP_Zotero_Sync_Plugin;
-        $items = unserialize( file_get_contents( 'tests/fixture_items.php' ) );
+        $items = $this->get_items();
 		$this->assertEquals( 21, count($items) );        
     }
 }

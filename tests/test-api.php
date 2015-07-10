@@ -3,6 +3,31 @@
 define("LIVE_API", false);
 
 class ApiTest extends WP_UnitTestCase {
+    public $users = array();
+
+    public function setUp() {
+        parent::setUp();
+
+        $user_args = array(
+            array(
+                'first_name' => 'Ruha',
+                'last_name' => 'Benjamin',
+            ),
+            array(
+                'first_name' => 'Wendy Laura',
+                'last_name' => 'Belcher',
+            ),
+            array(
+                'first_name' => 'Chika',
+                'last_name' => 'Okeke-Agulu',
+            ),
+        );
+
+        foreach ($user_args as $args) {
+            $this->users[$args['last_name']] = $this->factory->user->create( $args );
+        }        
+    }
+
     function get_config() {
         $config = array(
             'libraryType' => 'group',
@@ -28,10 +53,28 @@ class ApiTest extends WP_UnitTestCase {
 		$this->assertEquals( 21, count($items) );
 	}
 
+    function check_author($item, $last_name) {
+        global $WP_Zotero_Sync_Plugin;
+
+        $authors = $WP_Zotero_Sync_Plugin->get_wp_authors_for($item);
+        $this->assertEquals(1, count($authors));
+
+        $author = $authors[0];
+        $this->assertEquals( $this->users[$last_name], $author );
+    }
+
+    function test_get_wp_authors() {
+        global $WP_Zotero_Sync_Plugin;
+        $items = $this->get_items();
+
+        $this->check_authors($items[0], 'Benjamin');
+        $this->check_authors($items[1], 'Belcher');
+        $this->check_authors($items[2], 'Okeke-Agulu');
+    }
+
     function test_convert_items_to_posts() {
         global $WP_Zotero_Sync_Plugin;
         $items = $this->get_items();
-		$this->assertEquals( 21, count($items) );
 
         $post_items = $WP_Zotero_Sync_Plugin->convert_to_posts( $items );
         $article = $post_items[0];

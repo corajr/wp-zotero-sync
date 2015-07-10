@@ -115,7 +115,7 @@ class WP_Zotero_Sync_Plugin {
         return $author;
     }
 
-    public function get_wp_authors_of($item) {
+    public function get_wp_authors_for($item) {
         $authors = array();
         foreach ($item->creators as $creator) {
             if ($creator['creatorType'] == 'author') {
@@ -130,7 +130,7 @@ class WP_Zotero_Sync_Plugin {
         foreach ($items as $item) {
             $post = array(
                 'title' => $item->title,
-                'authors' => $this->get_wp_authors_of($item),
+                'authors' => $this->get_wp_authors_for($item),
                 'dateUpdated' => $item->dateUpdated,
                 'meta' => array(
                     'wpcf-date' => $item->year,

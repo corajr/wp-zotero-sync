@@ -10,9 +10,17 @@ Text Domain: wp-zotero-sync
 Domain Path: /languages
 */
 
+require_once( dirname(__FILE__) . '/libZoteroSingle.php' );
+
 class WP_Zotero_Sync_Plugin {
     private static $instance = false;
     private static $libraries = array();
+
+    private static $api_fields = array(
+        'publicationTitle' => 'wpcf-journal',
+        'bookTitle' => 'wpcf-journal', // the name for the overall collection
+        'publisher' => 'wpcf-publisher',
+    );
     
 	/**
 	 * This is our constructor
@@ -34,7 +42,6 @@ class WP_Zotero_Sync_Plugin {
         if (isset(static::$libraries[''])) {
             $library = static::$libraries[$lib_key];
         } else {
-            require_once( dirname(__FILE__) . '/libZoteroSingle.php' );
             $library = new Zotero_Library(
                 $config['libraryType'],
                 $config['libraryID'],
@@ -80,10 +87,40 @@ class WP_Zotero_Sync_Plugin {
         return $items;
     }
 
+    public function get_or_create_wp_author($creator) {
+        $author = null;
+        $args = array(
+            'meta_query' => array(
+                'relation' => 'AND',
+                array(
+                    'key'     => 'first_name',
+                    'value'   => $creator['firstName'],
+                    'compare' => 'LIKE'
+                ),
+                array(
+                    'key'     => 'last_name',
+                    'value'   => $creator['lastName'],
+                    'compare' => 'LIKE'
+                ),
+            ),
+        );
+
+        $user_query = new WP_User_Query( $args );
+        if (! empty( $user_query->results) ) { // use existing author
+            foreach ($user_query->results as $user) {
+                $author = $user->ID;
+            }
+        } else { // create a guest author
+        }
+        return $author;
+    }
+
     public function get_wp_authors_of($item) {
         $authors = array();
         foreach ($item->creators as $creator) {
-            $authors[] = $author;
+            if ($creator['creatorType'] == 'author') {
+                $authors[] = $this->get_or_create_wp_author($creator);
+            }
         }
         return $authors;
     }
@@ -93,6 +130,7 @@ class WP_Zotero_Sync_Plugin {
         foreach ($items as $item) {
             $post = array(
                 'title' => $item->title,
+                'authors' => $this->get_wp_authors_of($item),
                 'dateUpdated' => $item->dateUpdated,
                 'meta' => array(
                     'wpcf-date' => $item->year,
@@ -102,14 +140,10 @@ class WP_Zotero_Sync_Plugin {
             );
 
             $api_obj = $item->apiObject;
-            if (isset($api_obj['publicationTitle'])) {                
-                $post['meta']['wpcf-journal'] = $api_obj['publicationTitle'];
-            }
-            if (isset($api_obj['publicationTitle'])) {                
-                $post['meta']['wpcf-journal'] = $api_obj['publicationTitle'];
-            }
-            if (isset($api_obj['publisher'])) {                
-                $post['meta']['wpcf-publisher'] = $api_obj['publisher'];
+            foreach (static::$api_fields as $field=>$custom) {
+                if (isset($api_obj[$field])) {
+                    $post['meta'][$custom] = $api_obj[$field];
+                }
             }
 
             $posts[] = $post;

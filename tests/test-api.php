@@ -53,6 +53,33 @@ class ApiTest extends WP_UnitTestCase {
 		$this->assertEquals( 21, count($items) );
 	}
 
+    function test_add_guest_author() {
+        global $WP_Zotero_Sync_Plugin;
+
+        $args = array(
+            'firstName' => 'Michael',
+            'lastName' => 'Kleiner'
+        );
+
+        $author = $WP_Zotero_Sync_Plugin->add_guest_author( $args );
+        $this->assertNotEmpty( $author );
+    }
+
+    function test_get_or_create_wp_author() {
+        global $WP_Zotero_Sync_Plugin;
+
+        $args = array(
+            'firstName' => 'Michael',
+            'lastName' => 'Kleiner'
+        );
+
+        $author = $WP_Zotero_Sync_Plugin->get_or_create_wp_author( $args );
+        $this->assertNotEmpty( $author );
+        $author2 = $WP_Zotero_Sync_Plugin->get_or_create_wp_author( $args );
+        $this->assertEquals( $author, $author2 );
+    }
+
+    
     function check_authors($item, $last_names) {
         global $WP_Zotero_Sync_Plugin;
 
@@ -60,8 +87,15 @@ class ApiTest extends WP_UnitTestCase {
 
         $users = $this->users;
 
-        $real_ids = array_map(function($last_name) use ($users) {
-                return $users[$last_name];
+        $real_ids = array_map(function($last_name) use ($users, $WP_Zotero_Sync_Plugin) {
+                if (isset($users[$last_name])) {
+                    return $users[$last_name];
+                } else {
+                    $user = $WP_Zotero_Sync_Plugin->find_creator(
+                        array('lastName' => $last_name)
+                    );
+                    return $user->ID;
+                }
         }, $last_names);
 
         $this->assertEquals( $real_ids, $authors );
@@ -74,6 +108,7 @@ class ApiTest extends WP_UnitTestCase {
         $this->check_authors($items[0], array('Benjamin'));
         $this->check_authors($items[1], array('Belcher'));
         $this->check_authors($items[2], array('Okeke-Agulu'));
+        $this->check_authors($items[18], array('Belcher', 'Kleiner'));
     }
 
     function test_convert_items_to_posts() {

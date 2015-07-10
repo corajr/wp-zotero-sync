@@ -38,8 +38,7 @@ class WP_Zotero_Sync_Plugin {
             $library = new Zotero_Library(
                 $config['libraryType'],
                 $config['libraryID'],
-                $config['librarySlug'],
-                $config['collectionKey']
+                $config['librarySlug']
             );
             $library->setCacheTtl(1800);
 
@@ -56,6 +55,7 @@ class WP_Zotero_Sync_Plugin {
         $params = array(
             'order' => 'title',
             'limit' => $per_request_limit,
+            'collectionKey' => $config['collectionKey'],
         );
 
         $more_items = true;

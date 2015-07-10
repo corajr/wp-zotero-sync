@@ -2958,7 +2958,7 @@ class Zotero_Creator
     }
 }
 
-define('LIBZOTERO_DEBUG', 0);
+define('LIBZOTERO_DEBUG', 1);
 define('ZOTERO_API_VERSION', 2);
 function libZoteroDebug($m){
     if(LIBZOTERO_DEBUG){

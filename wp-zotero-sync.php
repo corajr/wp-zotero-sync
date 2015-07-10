@@ -56,6 +56,7 @@ class WP_Zotero_Sync_Plugin {
             'order' => 'title',
             'limit' => $per_request_limit,
             'collectionKey' => $config['collectionKey'],
+            'content' => 'json,bib',
         );
 
         $more_items = true;
@@ -77,6 +78,14 @@ class WP_Zotero_Sync_Plugin {
             }
         }
         return $items;
+    }
+
+    public function convert_to_posts($items) {
+        $posts = array();
+        foreach ($items as $item) {
+            $posts[] = $item;
+        }
+        return $posts;
     }
 }
 

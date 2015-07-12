@@ -11,9 +11,12 @@ Domain Path: /languages
 */
 
 require_once( dirname(__FILE__) . '/libZoteroSingle.php' );
+require_once( dirname(__FILE__) . '/options.php' );
 
 class WP_Zotero_Sync_Plugin {
     private static $instance = false;
+
+    private static $option_handler = null;
     private static $libraries = array();
 
     private static $api_fields = array(
@@ -28,7 +31,10 @@ class WP_Zotero_Sync_Plugin {
 	 * @return void
 	 */
     private function __construct() {
+        $option_handler = new WPZoteroSyncOptionHandler();
         add_action( 'init', array( $this, 'ensure_publication_post_type' ) );
+        add_action( 'admin_menu', array( $option_handler, 'add_submenu' ) );
+        add_action( 'admin_init', array( $option_handler, 'register_settings' ) );
     }
 
 	public static function get_instance() {

@@ -87,6 +87,18 @@ class ApiTest extends WP_UnitTestCase {
         $author2 = $WP_Zotero_Sync_Plugin->get_or_create_wp_author( $args );
         $this->assertEquals( $author, $author2 );
     }
+
+    function test_commaify() {
+        global $WP_Zotero_Sync_Plugin;
+
+        $list = array('A', 'B', 'C');
+        $res1 = $WP_Zotero_Sync_Plugin->commaify( array_slice( $list, 0, 1 ) );
+        $res2 = $WP_Zotero_Sync_Plugin->commaify( array_slice( $list, 0, 2 ) );
+        $res3 = $WP_Zotero_Sync_Plugin->commaify( array_slice( $list, 0, 3 ) );
+        $this->assertEquals('A', $res1);
+        $this->assertEquals('A and B', $res2);
+        $this->assertEquals('A, B, and C', $res3);
+    }
     
     function check_authors($item, $last_names) {
         global $WP_Zotero_Sync_Plugin;
@@ -162,6 +174,7 @@ class ApiTest extends WP_UnitTestCase {
         $this->assertEquals( 'SIQEK7CP', $book_section['meta']['wpcf-zotero-key'] );
         $this->assertEquals( 'Art History and Globalization', $book_section['title'] );
         $this->assertEquals( 'Is Art History Global', $book_section['meta']['wpcf-journal'] );
+        $this->assertEquals( 'James Elkins', $book_section['meta']['wpcf-editors'] );
         $this->assertEquals( 1, count($book_section['authors']) );
 
         // Don't include authors in citation format.

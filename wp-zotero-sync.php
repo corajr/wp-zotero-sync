@@ -213,6 +213,38 @@ class WP_Zotero_Sync_Plugin {
         return $areas;
     }
 
+    public function commaify( $list ) {
+        switch (count( $list ) ) {
+        case 0:
+            return $list;
+            break;
+        case 1:
+            return $list[0];
+            break;
+        case 2:
+            return implode(" and ", $list);
+            break;
+        default:
+            $last = 'and ' . end( $list );
+            array_splice( $list, -1, 1, $last );
+            return implode(', ', $list);
+        }
+    }
+
+    public function get_editors_for( $item ) {
+        $editors = array();
+        foreach ($item->creators as $creator) {
+            if ($creator['creatorType'] == 'editor') {
+                $editors[] = $creator['firstName'] . ' ' . $creator['lastName'];
+            }
+        }
+        if ( count( $editors ) > 0 ) {
+            return $this->commaify( $editors );
+        } else {
+            return false;
+        }
+    }
+
     public function reformat_citation( $citation ) {
         return preg_replace("/>[^.<&]+\. /", ">", $citation);
     }
@@ -232,6 +264,11 @@ class WP_Zotero_Sync_Plugin {
                     'wpcf-research-areas' => $areas,
                 ),
             );
+
+            $editors = $this->get_editors_for( $item );
+            if ($editors) {
+                $post['meta']['wpcf-editors'] = $editors;
+            }
 
             $api_obj = $item->apiObject;
             foreach ($this->api_fields as $field=>$custom) {

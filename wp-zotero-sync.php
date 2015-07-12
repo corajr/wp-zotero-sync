@@ -70,7 +70,7 @@ class WP_Zotero_Sync_Plugin {
 
         if ( !empty( $field ) ) {
             foreach ($field['data']['options'] as $key=>$value) {
-                $areas[$value['title']] = $value;
+                $areas[$value['title']] = $key;
             }
         }
 
@@ -206,7 +206,8 @@ class WP_Zotero_Sync_Plugin {
         foreach ($item->apiObject['tags'] as $tag_obj) {
             $area = $tag_obj['tag'];
             if ( isset( $this->research_areas[$area] ) ) {
-                $areas[] = $this->research_areas[$area];
+                $key = $this->research_areas[$area];
+                $areas[$key] = array($area);
             }
         }
         return $areas;
@@ -215,6 +216,7 @@ class WP_Zotero_Sync_Plugin {
     public function convert_to_posts($items) {
         $posts = array();
         foreach ($items as $item) {
+            $areas = $this->get_areas_for( $item );
             $post = array(
                 'title' => $item->title,
                 'authors' => $this->get_wp_authors_for($item),
@@ -223,6 +225,7 @@ class WP_Zotero_Sync_Plugin {
                     'wpcf-date' => $item->year,
                     'wpcf-zotero-key' => $item->itemKey,
                     'wpcf-citation' => $item->bibContent,
+                    'wpcf-research-areas' => $areas,
                 ),
             );
 

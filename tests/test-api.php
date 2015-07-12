@@ -45,7 +45,7 @@ class ApiTest extends WP_UnitTestCase {
         global $WP_Zotero_Sync_Plugin;
         if (LIVE_API) {
             $items = $WP_Zotero_Sync_Plugin->get_items( $this->get_config() );
-            // file_put_contents( 'tests/fixture_items.php', serialize( $items ) );
+            file_put_contents( 'tests/fixture_items.php', serialize( $items ) );
         } else {
             $items = unserialize( file_get_contents( 'tests/fixture_items.php' ) );
         }
@@ -137,10 +137,11 @@ class ApiTest extends WP_UnitTestCase {
         $post_items = $WP_Zotero_Sync_Plugin->convert_to_posts( $items );
         $article = $post_items[0];
         $this->assertEquals( 'A lab of their own: Genomic sovereignty as postcolonial science policy', $article['title'] );
-        $this->assertEquals( '2015-07-12T19:19:12Z', $article['dateUpdated'] );
+        $this->assertEquals( '2015-07-12T19:41:00Z', $article['dateUpdated'] );
         $this->assertEquals( 'ZHT8VRSH', $article['meta']['wpcf-zotero-key'] );
         $this->assertEquals( '2009', $article['meta']['wpcf-date'] );
         $this->assertEquals( 'Policy and Society', $article['meta']['wpcf-journal'] );
+        $this->assertStringStartsWith( 'This paper analyzes', $article['abstract'] );
 
         $this->assertArrayNotHasKey( 'wpcf-editors', $article['meta'] );
         $this->assertArrayNotHasKey( 'wpcf-publisher', $article['meta'] );
@@ -185,6 +186,7 @@ class ApiTest extends WP_UnitTestCase {
         $example = $publications[0];
 
         $this->assertEquals( 'A lab of their own: Genomic sovereignty as postcolonial science policy', $example->post_title );
+        $this->assertStringStartsWith( 'This paper analyzes', $example->post_content );
         $author = get_user_by( 'id', $example->post_author );
         $this->assertEquals( $this->users['Benjamin'], $author->user_nicename );
     }

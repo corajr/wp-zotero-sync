@@ -25,7 +25,7 @@ class WP_Zotero_Sync_Plugin {
         'publisher' => 'wpcf-publisher',
     );
 
-    private $research_areas = null;
+    private $research_areas = array();
     
 	/**
 	 * This is our constructor
@@ -70,7 +70,7 @@ class WP_Zotero_Sync_Plugin {
 
         if ( !empty( $field ) ) {
             foreach ($field['data']['options'] as $key=>$value) {
-                
+                $areas[$value['title']] = $value;
             }
         }
 
@@ -203,6 +203,12 @@ class WP_Zotero_Sync_Plugin {
 
     public function get_areas_for( $item ) {
         $areas = array();
+        foreach ($item->apiObject['tags'] as $tag_obj) {
+            $area = $tag_obj['tag'];
+            if ( isset( $this->research_areas[$area] ) ) {
+                $areas[] = $this->research_areas[$area];
+            }
+        }
         return $areas;
     }
 
@@ -225,6 +231,10 @@ class WP_Zotero_Sync_Plugin {
                 if (isset($api_obj[$field])) {
                     $post['meta'][$custom] = $api_obj[$field];
                 }
+            }
+
+            if ( isset( $api_obj['abstractNote'] ) ) {
+                $post['abstract'] = $api_obj['abstractNote'];
             }
 
             $posts[] = $post;
@@ -274,6 +284,11 @@ class WP_Zotero_Sync_Plugin {
                 if ($existing->modified > $post_item['dateUpdated']) {
                     // don't alter if Zotero entry is outdated
                 } else {
+                    wp_update_post( array(
+                        'ID' => $existing->ID,
+                        'post_content' => $post_item['abstract'],
+                    ) );
+
                     $this->do_update_post_meta($existing->ID, $post_item);
                 }
             } else {
@@ -282,7 +297,7 @@ class WP_Zotero_Sync_Plugin {
                     'post_name' => sanitize_title( $post_item['title'] ),
                     'post_title' => $post_item['title'],
                     'post_status' => 'publish',
-                    'post_content' => '',
+                    'post_content' => $post_item['abstract'],
                     'post_excerpt' => '',
                 );
                 $post_id = wp_insert_post( $args );

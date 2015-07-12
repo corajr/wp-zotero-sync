@@ -32,11 +32,11 @@ class ApiTest extends WP_UnitTestCase {
 
     function get_config() {
         $config = array(
-            'libraryType' => 'group',
-            'libraryID' => 359247,
-            'librarySlug' => 'wordpress_sync_test_data',
-            'apiKey' => '',
-            'collectionKey' => 'IPJWZUAI',
+            'library_type' => 'group',
+            'library_id' => 359247,
+            'library_slug' => 'wordpress_sync_test_data',
+            'api_key' => '',
+            'collection_key' => 'IPJWZUAI',
         );
         return $config;
     }
@@ -153,6 +153,8 @@ class ApiTest extends WP_UnitTestCase {
         $args = array(
             'posts_per_page' => -1,
             'post_type' => 'publication',
+            'order' => 'ASC',
+            'order_by' => 'ID',
         );
 
         $publications = get_posts( $args );

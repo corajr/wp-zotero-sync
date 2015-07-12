@@ -31,7 +31,7 @@ class WP_Zotero_Sync_Plugin {
 	 * @return void
 	 */
     private function __construct() {
-        $option_handler = new WPZoteroSyncOptionHandler();
+        $option_handler = new WPZoteroSyncOptionHandler( $this );
         add_action( 'init', array( $this, 'ensure_publication_post_type' ) );
         add_action( 'admin_menu', array( $option_handler, 'add_submenu' ) );
         add_action( 'admin_init', array( $option_handler, 'register_settings' ) );
@@ -66,9 +66,9 @@ class WP_Zotero_Sync_Plugin {
             $library = static::$libraries[$lib_key];
         } else {
             $library = new Zotero_Library(
-                $config['libraryType'],
-                $config['libraryID'],
-                $config['librarySlug']
+                $config['library_type'],
+                $config['library_id'],
+                $config['library_slug']
             );
             $library->setCacheTtl(1800);
 
@@ -85,7 +85,7 @@ class WP_Zotero_Sync_Plugin {
         $params = array(
             'order' => 'title',
             'limit' => $per_request_limit,
-            'collectionKey' => $config['collectionKey'],
+            'collectionKey' => $config['collection_key'],
             'content' => 'json,bib',
         );
 
@@ -266,6 +266,15 @@ class WP_Zotero_Sync_Plugin {
                 $this->do_update_post_meta($post_id, $post_item);
                 $this->do_add_coauthors($post_id, $post_item);
             }
+        }
+    }
+
+    public function sync() {
+        $config = get_option( 'wpzs_settings' );
+        if (!empty($config)) {
+            $items = $this->get_items($config);
+            $post_items = $this->convert_to_posts($items);
+            $this->create_posts($post_items);
         }
     }
 }

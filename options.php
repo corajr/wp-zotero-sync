@@ -5,8 +5,10 @@ class WPZoteroSyncOptionHandler {
     private $settings_section_name = 'wp-zotero-sync-settings';
     private $setting_name = 'wpzs_settings';
     private $page_name = 'wp-zotero-sync-page';
-    
-    public function __construct() {
+    private $parent = null;
+
+    public function __construct( $parent ) {
+        $this->parent = $parent;
     }
 
     public function add_submenu() {
@@ -72,8 +74,19 @@ class WPZoteroSyncOptionHandler {
         if ( !current_user_can( 'edit_plugins' ) ) {
             wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
         }
+    
         echo '<div class="wrap">';
         echo '<h2>' . __( 'Zotero Sync Setup', 'wp-zotero-sync' ) . '</h2>';
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            check_admin_referer( 'zotero-sync' ); 
+            $this->parent->sync();
+            echo '<p>';
+            _e('Sync complete.', 'wp-zotero-sync');
+            echo '</p>';
+        }
+
+        $this->sync_form();
 
         settings_errors();
 
@@ -85,5 +98,12 @@ class WPZoteroSyncOptionHandler {
 
         echo '</form>';
         echo '</div>';
+    }
+
+    public function sync_form() {
+        echo "<form action='' method='POST'>";
+        wp_nonce_field( 'zotero-sync' );
+        submit_button( __( 'Sync Now', 'wp-zotero-sync' ) );
+        echo '</form>';
     }
 }

@@ -251,6 +251,7 @@ class WP_Zotero_Sync_Plugin {
                     'post_type' => 'publication',
                     'post_name' => sanitize_title( $post_item['title'] ),
                     'post_title' => $post_item['title'],
+                    'post_status' => 'publish',
                     'post_content' => '',
                     'post_excerpt' => '',
                 );

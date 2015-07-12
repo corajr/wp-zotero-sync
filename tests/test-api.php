@@ -151,6 +151,7 @@ class ApiTest extends WP_UnitTestCase {
         $WP_Zotero_Sync_Plugin->create_posts( $post_items );
 
         $args = array(
+            'posts_per_page' => -1,
             'post_type' => 'publication',
         );
 
@@ -161,6 +162,8 @@ class ApiTest extends WP_UnitTestCase {
         $example = $publications[0];
 
         $this->assertEquals( 'A lab of their own: Genomic sovereignty as postcolonial science policy', $example->post_title );
+        $author = get_user_by( 'id', $example->post_author );
+        $this->assertEquals( 'ruha-benjamin', $author->user_nicename );
     }
     
 }

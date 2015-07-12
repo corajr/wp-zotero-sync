@@ -162,7 +162,12 @@ class ApiTest extends WP_UnitTestCase {
         $this->assertEquals( 'SIQEK7CP', $book_section['meta']['wpcf-zotero-key'] );
         $this->assertEquals( 'Art History and Globalization', $book_section['title'] );
         $this->assertEquals( 'Is Art History Global', $book_section['meta']['wpcf-journal'] );
-        $this->assertEquals( 1, count($book_section['authors']) );        
+        $this->assertEquals( 1, count($book_section['authors']) );
+
+        // Don't include authors in citation format.
+        $joint_authored = $post_items[18];
+        $this->assertNotContains( 'Belcher, Wendy', $joint_authored['meta']['wpcf-citation'] );
+        $this->assertNotContains( 'Michael Kleiner', $joint_authored['meta']['wpcf-citation'] );
     }
 
     function get_publications() {

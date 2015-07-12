@@ -213,6 +213,10 @@ class WP_Zotero_Sync_Plugin {
         return $areas;
     }
 
+    public function reformat_citation( $citation ) {
+        return preg_replace("/(?:>)[^.<&]+\. /", ">", $citation);
+    }
+
     public function convert_to_posts($items) {
         $posts = array();
         foreach ($items as $item) {
@@ -224,7 +228,7 @@ class WP_Zotero_Sync_Plugin {
                 'meta' => array(
                     'wpcf-date' => $item->year,
                     'wpcf-zotero-key' => $item->itemKey,
-                    'wpcf-citation' => $item->bibContent,
+                    'wpcf-citation' => $this->reformat_citation( $item->bibContent ),
                     'wpcf-research-areas' => $areas,
                 ),
             );

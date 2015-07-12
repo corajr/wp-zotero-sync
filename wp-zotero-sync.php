@@ -61,8 +61,24 @@ class WP_Zotero_Sync_Plugin {
         }
     }
 
+    public function set_research_areas( $field = null ) {
+        $areas = array();
+
+        if ( empty( $field ) && function_exists( 'wpcf_admin_fields_get_field' ) ) {
+            $field = wpcf_admin_fields_get_field( 'research-areas' );
+        }
+
+        if ( !empty( $field ) ) {
+            foreach ($field['data']['options'] as $key=>$value) {
+                
+            }
+        }
+
+        $this->research_areas = $areas;
+    }
+
     private function get_server_connection($config) {
-        $lib_key = $config['libraryType'] . $config['libraryID'] . $config['collectionKey'];
+        $lib_key = $config['library_type'] . $config['library_id'] . $config['collection_key'];
 
         if (isset($this->libraries[''])) {
             $library = $this->libraries[$lib_key];
@@ -74,7 +90,7 @@ class WP_Zotero_Sync_Plugin {
             );
             $library->setCacheTtl(1800);
 
-            $this->$libraries[$lib_key] = $library;
+            $this->libraries[$lib_key] = $library;
         }
         return $library;
     }
@@ -271,7 +287,8 @@ class WP_Zotero_Sync_Plugin {
         }
     }
 
-    public function sync() {
+    public function sync( $research_areas_field = null ) {
+        $this->set_research_areas( $research_areas_field );
         $config = get_option( 'wpzs_settings' );
         if (!empty($config)) {
             $items = $this->get_items($config);

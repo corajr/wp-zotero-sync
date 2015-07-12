@@ -51,6 +51,10 @@ class ApiTest extends WP_UnitTestCase {
         return $items;
     }
 
+    function get_research_areas_field() {
+        return unserialize( file_get_contents( 'tests/fixture_fields.php' ) );
+    }
+
 	function test_get_items_from_api() {
         global $WP_Zotero_Sync_Plugin;
         $items = $this->get_items();
@@ -142,14 +146,7 @@ class ApiTest extends WP_UnitTestCase {
         $this->assertEquals( 1, count($book_section['authors']) );        
     }
 
-    function test_create_posts() {
-        global $WP_Zotero_Sync_Plugin;
-
-        $items = $this->get_items();
-        $post_items = $WP_Zotero_Sync_Plugin->convert_to_posts( $items );
-
-        $WP_Zotero_Sync_Plugin->create_posts( $post_items );
-
+    function get_publications() {
         $args = array(
             'posts_per_page' => -1,
             'post_type' => 'publication',
@@ -158,6 +155,18 @@ class ApiTest extends WP_UnitTestCase {
         );
 
         $publications = get_posts( $args );
+        return $publications;
+    }
+
+    function test_create_posts() {
+        global $WP_Zotero_Sync_Plugin;
+
+        $items = $this->get_items();
+        $post_items = $WP_Zotero_Sync_Plugin->convert_to_posts( $items );
+
+        $WP_Zotero_Sync_Plugin->create_posts( $post_items );
+
+        $publications = $this->get_publications();
 
         $this->assertEquals( NUM_ITEMS, count($publications) );
 
@@ -167,6 +176,18 @@ class ApiTest extends WP_UnitTestCase {
         $author = get_user_by( 'id', $example->post_author );
         $this->assertEquals( $this->users['Benjamin'], $author->user_nicename );
     }
-    
+
+    function test_sync() {
+        global $WP_Zotero_Sync_Plugin;
+
+        update_option( 'wpzs_settings', $this->get_config() );
+
+        $WP_Zotero_Sync_Plugin->sync( $this->get_research_areas_field() );
+        $publications = $this->get_publications();
+
+        $this->assertEquals( NUM_ITEMS, count($publications) );
+
+        $example = $publications[0];
+    }
 }
 

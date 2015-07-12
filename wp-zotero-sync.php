@@ -16,14 +16,16 @@ require_once( dirname(__FILE__) . '/options.php' );
 class WP_Zotero_Sync_Plugin {
     private static $instance = false;
 
-    private static $option_handler = null;
-    private static $libraries = array();
+    private $option_handler = null;
+    private $libraries = array();
 
-    private static $api_fields = array(
+    private $api_fields = array(
         'publicationTitle' => 'wpcf-journal',
         'bookTitle' => 'wpcf-journal', // the name for the overall collection
         'publisher' => 'wpcf-publisher',
     );
+
+    private $research_areas = null;
     
 	/**
 	 * This is our constructor
@@ -31,10 +33,10 @@ class WP_Zotero_Sync_Plugin {
 	 * @return void
 	 */
     private function __construct() {
-        $option_handler = new WPZoteroSyncOptionHandler( $this );
+        $this->option_handler = new WPZoteroSyncOptionHandler( $this );
         add_action( 'init', array( $this, 'ensure_publication_post_type' ) );
-        add_action( 'admin_menu', array( $option_handler, 'add_submenu' ) );
-        add_action( 'admin_init', array( $option_handler, 'register_settings' ) );
+        add_action( 'admin_menu', array( $this->option_handler, 'add_submenu' ) );
+        add_action( 'admin_init', array( $this->option_handler, 'register_settings' ) );
     }
 
 	public static function get_instance() {
@@ -62,8 +64,8 @@ class WP_Zotero_Sync_Plugin {
     private function get_server_connection($config) {
         $lib_key = $config['libraryType'] . $config['libraryID'] . $config['collectionKey'];
 
-        if (isset(static::$libraries[''])) {
-            $library = static::$libraries[$lib_key];
+        if (isset($this->libraries[''])) {
+            $library = $this->libraries[$lib_key];
         } else {
             $library = new Zotero_Library(
                 $config['library_type'],
@@ -72,7 +74,7 @@ class WP_Zotero_Sync_Plugin {
             );
             $library->setCacheTtl(1800);
 
-            static::$libraries[$lib_key] = $library;
+            $this->$libraries[$lib_key] = $library;
         }
         return $library;
     }
@@ -198,7 +200,7 @@ class WP_Zotero_Sync_Plugin {
             );
 
             $api_obj = $item->apiObject;
-            foreach (static::$api_fields as $field=>$custom) {
+            foreach ($this->api_fields as $field=>$custom) {
                 if (isset($api_obj[$field])) {
                     $post['meta'][$custom] = $api_obj[$field];
                 }

@@ -214,7 +214,7 @@ class WP_Zotero_Sync_Plugin {
     }
 
     public function reformat_citation( $citation ) {
-        return preg_replace("/(?:>)[^.<&]+\. /", ">", $citation);
+        return preg_replace("/>[^.<&]+\. /", ">", $citation);
     }
 
     public function convert_to_posts($items) {

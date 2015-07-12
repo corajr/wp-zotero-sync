@@ -201,6 +201,11 @@ class WP_Zotero_Sync_Plugin {
         return $authors;
     }
 
+    public function get_areas_for( $item ) {
+        $areas = array();
+        return $areas;
+    }
+
     public function convert_to_posts($items) {
         $posts = array();
         foreach ($items as $item) {

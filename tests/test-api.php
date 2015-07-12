@@ -45,6 +45,7 @@ class ApiTest extends WP_UnitTestCase {
         global $WP_Zotero_Sync_Plugin;
         if (LIVE_API) {
             $items = $WP_Zotero_Sync_Plugin->get_items( $this->get_config() );
+            // file_put_contents( 'tests/fixture_items.php', serialize( $items ) );
         } else {
             $items = unserialize( file_get_contents( 'tests/fixture_items.php' ) );
         }
@@ -118,6 +119,17 @@ class ApiTest extends WP_UnitTestCase {
         $this->check_authors($items[18], array('Belcher', 'Kleiner'));
     }
 
+    function test_research_areas() {
+        global $WP_Zotero_Sync_Plugin;
+        $field = $this->get_research_areas_field();
+        $WP_Zotero_Sync_Plugin->set_research_areas( $field );
+
+        $items = $this->get_items();
+        $areas = $WP_Zotero_Sync_Plugin->get_areas_for( $items[0] );
+
+        $this->assertEquals( 2, count( $areas ) );
+    }
+
     function test_convert_items_to_posts() {
         global $WP_Zotero_Sync_Plugin;
         $items = $this->get_items();
@@ -125,7 +137,7 @@ class ApiTest extends WP_UnitTestCase {
         $post_items = $WP_Zotero_Sync_Plugin->convert_to_posts( $items );
         $article = $post_items[0];
         $this->assertEquals( 'A lab of their own: Genomic sovereignty as postcolonial science policy', $article['title'] );
-        $this->assertEquals( '2015-06-14T19:38:59Z', $article['dateUpdated'] );
+        $this->assertEquals( '2015-07-12T19:19:12Z', $article['dateUpdated'] );
         $this->assertEquals( 'ZHT8VRSH', $article['meta']['wpcf-zotero-key'] );
         $this->assertEquals( '2009', $article['meta']['wpcf-date'] );
         $this->assertEquals( 'Policy and Society', $article['meta']['wpcf-journal'] );

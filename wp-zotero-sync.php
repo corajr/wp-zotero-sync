@@ -229,9 +229,10 @@ class WP_Zotero_Sync_Plugin {
             $coauthors_plus->add_coauthors($post_id, $post_item['authors']);
         } else {
             $author = $post_item['authors'][0];
+            $user = get_user_by( 'slug', $author );
             wp_update_post( array(
                 'ID' => $post_id,
-                'post_author' => $author
+                'post_author' => $user->ID,
             ) );
         }
     }

@@ -163,7 +163,7 @@ class ApiTest extends WP_UnitTestCase {
 
         $this->assertEquals( 'A lab of their own: Genomic sovereignty as postcolonial science policy', $example->post_title );
         $author = get_user_by( 'id', $example->post_author );
-        $this->assertEquals( 'ruha-benjamin', $author->user_nicename );
+        $this->assertEquals( $this->users['Benjamin'], $author->user_nicename );
     }
     
 }

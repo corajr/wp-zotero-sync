@@ -20,6 +20,7 @@ class WPZoteroSyncOptionHandler {
     }
 
     public function register_settings() {
+        add_option( $this->setting_name, array() );
         register_setting(
             $this->settings_group,
             $this->setting_name
@@ -54,10 +55,12 @@ class WPZoteroSyncOptionHandler {
     public function text_field( $args ) {
         $field = $args['field'];
         $setting = $args['setting'];
+
         $options = get_option( $setting );
-        print_r($options);
+        $name = $setting . '[' . $field . ']';
+        $value = $options[$field];
         ?>
-	<input type='text' name='<?php echo $setting . '[' . $field . ']';?>' value='<?php echo $options[$field]; ?>'>
+	<input type='text' name='<?php echo $name; ?>' value='<?php echo $value; ?>'/>
     <?php
     }
 
@@ -72,9 +75,11 @@ class WPZoteroSyncOptionHandler {
         echo '<div class="wrap">';
         echo '<h2>' . __( 'Zotero Sync Setup', 'wp-zotero-sync' ) . '</h2>';
 
-        echo "<form action='' method='post'>";
+        settings_errors();
 
-        settings_fields( $this->page_name );   
+        echo "<form action='options.php' method='post'>";
+
+        settings_fields( $this->settings_group );
         do_settings_sections( $this->page_name );
         submit_button();
 

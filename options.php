@@ -60,7 +60,10 @@ class WPZoteroSyncOptionHandler {
 
         $options = get_option( $setting );
         $name = $setting . '[' . $field . ']';
-        $value = $options[$field];
+        $value = '';
+        if ( isset( $options[$field] ) ) {
+            $value = $options[$field];
+        }
         ?>
 	<input type='text' name='<?php echo $name; ?>' value='<?php echo $value; ?>'/>
     <?php

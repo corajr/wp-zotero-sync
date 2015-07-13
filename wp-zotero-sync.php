@@ -88,7 +88,6 @@ class WP_Zotero_Sync_Plugin {
                 $config['library_id'],
                 $config['library_slug']
             );
-            $library->setCacheTtl(1800);
 
             $this->libraries[$lib_key] = $library;
         }

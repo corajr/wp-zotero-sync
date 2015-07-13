@@ -11,31 +11,57 @@ WP Zotero Sync enables you to synchronize a custom post type, called "Publicatio
 
 == Description ==
 
-This is a one-way synchronization; the Zotero library will not be affected by changes you make on the WordPress side.
+Zotero is a bibliographic reference manager that is capable of storing
+a variety of documents and metadata. This plugin downloads the
+contents of a Zotero library and creates a set of posts that
+correspond to the records in the library.
+
+Note that this is a one-way synchronization; the Zotero library will
+not be affected by changes you make on the WordPress side.
+
+This plugin uses [Co-Authors
+Plus](https://wordpress.org/plugins/co-authors-plus/) to handle
+documents with multiple authors. Authors who are present on the site
+as WordPress users will be set as the authors of their respective
+publications, while others will be added as guest authors. (If
+Co-Authors Plus is not installed, regular users will be created instead.)
 
 == Installation ==
 
-This section describes how to install the plugin and get it working.
-
-e.g.
-
-1. Upload `plugin-name.php` to the `/wp-content/plugins/` directory
-1. Activate the plugin through the 'Plugins' menu in WordPress
-1. Place `<?php do_action('plugin_name_hook'); ?>` in your templates
+1. Install the plugin through the admin console (`/wp-admin`) and select "Activate Plugin."
+1. Under the "Publications" menu that has appeared, select "Zotero Sync."
+1. Enter the details of the library and collection you wish to synchronize. (See below.)
+1. Save your settings, then press "Sync Now" to download the documents. 
 
 == Frequently Asked Questions ==
 
-= What about foo bar? =
+= How do I find the details of my Zotero library? =
 
-Answer to foo bar dilemma.
+On the [zotero.org](http://www.zotero.org) site, log in and select the
+library you wish to sync (a group library or your own).
+
+View the source of that page and search for `libraryID`. The info is
+in a JSON object, that looks like this:
+
+```
+{"target":"collections", "libraryID":"123456", "groupID":"123456",
+"libraryType":"group", "libraryUrlIdentifier":"wordpress_sync_test_data"}
+```
+
+The first three settings are taken from this text (Library Type,
+Library ID, and "libraryUrlIdentifier" (Library Slug)).
+
+If you wish to download only a particular collection from the library,
+the Collection Key is found at the end of that collection's URL. For
+example if the collection is at
+`https://www.zotero.org/groups/[...]/collectionKey/ABCDEFGH`, then
+ABCDEFGH is the collection key.
 
 == Screenshots ==
 
-1. This screen shot description corresponds to screenshot-1.(png|jpg|jpeg|gif). Note that the screenshot is taken from
-the /assets directory or the directory that contains the stable readme.txt (tags or trunk). Screenshots in the /assets
-directory take precedence. For example, `/assets/screenshot-1.png` would win over `/tags/4.3/screenshot-1.png`
-(or jpg, jpeg, gif).
-2. This is the second screen shot
+1. The Sync Settings page.
+2. Publication posts as created by the plugin.
+3. A sample publication.
 
 == Changelog ==
 

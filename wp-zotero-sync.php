@@ -26,7 +26,7 @@ class WP_Zotero_Sync_Plugin {
     );
 
     private $research_areas = array();
-    
+
 	/**
 	 * This is our constructor
 	 *
@@ -165,13 +165,13 @@ class WP_Zotero_Sync_Plugin {
             'first_name' => $creator['firstName'],
             'last_name' => $creator['lastName'],
         );
-        
+
         if (!empty( $coauthors_plus )) {
             $user_id = $coauthors_plus->guest_authors->create( $args );
             return $user_login;
         } else {
             $args['user_pass'] = wp_generate_password();
-            $user_id = wp_insert_user( $args );  
+            $user_id = wp_insert_user( $args );
             $users = get_users( array( 'include' => array($user_id) ) );
             $user = reset($users);
             return $user->user_nicename;

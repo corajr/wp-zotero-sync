@@ -99,7 +99,7 @@ class ApiTest extends WP_UnitTestCase {
         $this->assertEquals('A and B', $res2);
         $this->assertEquals('A, B, and C', $res3);
     }
-    
+
     function check_authors($item, $last_names) {
         global $WP_Zotero_Sync_Plugin;
 
@@ -143,7 +143,7 @@ class ApiTest extends WP_UnitTestCase {
 
         $expected_areas = array(
             'wpcf-fields-checkboxes-option-8aae55f870d165de229c4244c7c0cb43-1' => array("Post-Colonialization"),
-            'wpcf-fields-checkboxes-option-7909242e2a2efa6de8880164ebd29a75-1' => array("Participatory Science"),            
+            'wpcf-fields-checkboxes-option-7909242e2a2efa6de8880164ebd29a75-1' => array("Participatory Science"),
         );
         $this->assertEquals( $expected_areas, $areas );
     }
@@ -230,7 +230,7 @@ class ApiTest extends WP_UnitTestCase {
 
         $expected_areas = array(
             'wpcf-fields-checkboxes-option-8aae55f870d165de229c4244c7c0cb43-1' => array("Post-Colonialization"),
-            'wpcf-fields-checkboxes-option-7909242e2a2efa6de8880164ebd29a75-1' => array("Participatory Science"),            
+            'wpcf-fields-checkboxes-option-7909242e2a2efa6de8880164ebd29a75-1' => array("Participatory Science"),
         );
 
         $areas = maybe_unserialize( $meta['wpcf-research-areas'][0] );

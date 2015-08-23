@@ -14,30 +14,31 @@ require_once( dirname(__FILE__) . '/libZoteroSingle.php' );
 require_once( dirname(__FILE__) . '/options.php' );
 
 class WP_Zotero_Sync_Plugin {
-    private static $instance = false;
+	private static $instance = false;
 
-    private $option_handler = null;
-    private $libraries = array();
+	private $option_handler = null;
+	private $libraries = array();
 
-    private $api_fields = array(
-        'publicationTitle' => 'wpcf-journal',
-        'bookTitle' => 'wpcf-journal', // the name for the overall collection
-        'publisher' => 'wpcf-publisher',
-    );
+	private $api_fields = array(
+		'publicationTitle' => 'wpcf-journal',
+		'bookTitle' => 'wpcf-journal', // the name for the overall collection
+		'publisher' => 'wpcf-publisher',
+	);
 
-    private $research_areas = array();
+	private $research_areas = array();
+	private $categories = array();
 
 	/**
 	 * This is our constructor
 	 *
 	 * @return void
 	 */
-    private function __construct() {
-        $this->option_handler = new WPZoteroSyncOptionHandler( $this );
-        add_action( 'init', array( $this, 'ensure_publication_post_type' ) );
-        add_action( 'admin_menu', array( $this->option_handler, 'add_submenu' ) );
-        add_action( 'admin_init', array( $this->option_handler, 'register_settings' ) );
-    }
+	private function __construct() {
+		$this->option_handler = new WPZoteroSyncOptionHandler( $this );
+		add_action( 'init', array( $this, 'ensure_publication_post_type' ) );
+		add_action( 'admin_menu', array( $this->option_handler, 'add_submenu' ) );
+		add_action( 'admin_init', array( $this->option_handler, 'register_settings' ) );
+	}
 
 	public static function get_instance() {
 		if ( !self::$instance )
@@ -45,320 +46,338 @@ class WP_Zotero_Sync_Plugin {
 		return self::$instance;
 	}
 
-    public function ensure_publication_post_type() {
-        if ( !post_type_exists( 'publication' ) ) {
-            register_post_type(
-                'publication',
-                array(
-                    'labels' => array(
-                        'name' => __( 'Publications' ),
-                        'singular_name' => __( 'Publication' )
-                    ),
-                    'public' => true,
-                    'has_archive' => true,
-                )
-            );
-        }
-    }
+	public function ensure_publication_post_type() {
+		if ( !post_type_exists( 'publication' ) ) {
+			register_post_type(
+				'publication',
+				array(
+					'labels' => array(
+						'name' => __( 'Publications' ),
+						'singular_name' => __( 'Publication' )
+					),
+					'public' => true,
+					'has_archive' => true,
+				)
+			);
+		}
+	}
 
-    public function set_research_areas( $field = null ) {
-        $areas = array();
+	public function set_research_areas( $field = null ) {
+		$areas = array();
 
-        if ( empty( $field ) && function_exists( 'wpcf_admin_fields_get_field' ) ) {
-            $field = wpcf_admin_fields_get_field( 'research-areas' );
-        }
+		if ( empty( $field ) && function_exists( 'wpcf_admin_fields_get_field' ) ) {
+			$field = wpcf_admin_fields_get_field( 'research-areas' );
+		}
 
-        if ( !empty( $field ) ) {
-            foreach ($field['data']['options'] as $key=>$value) {
-                $areas[$value['title']] = $key;
-            }
-        }
+		if ( !empty( $field ) ) {
+			foreach ($field['data']['options'] as $key=>$value) {
+				$areas[$value['title']] = $key;
+			}
+		}
 
-        $this->research_areas = $areas;
-    }
+		$this->research_areas = $areas;
+	}
 
-    private function get_server_connection($config) {
-        $lib_key = $config['library_type'] . $config['library_id'] . $config['collection_key'];
+	public function set_categories() {
+		$wp_categories = get_categories();
+		foreach ($wp_categories as $category) {
+			$this->categories[$category->name] = $category->term_id;
+		}
+	}
 
-        if (isset($this->libraries[''])) {
-            $library = $this->libraries[$lib_key];
-        } else {
-            $library = new Zotero_Library(
-                $config['library_type'],
-                $config['library_id'],
-                $config['library_slug']
-            );
+	private function get_server_connection($config) {
+		$lib_key = $config['library_type'] . $config['library_id'] . $config['collection_key'];
 
-            $this->libraries[$lib_key] = $library;
-        }
-        return $library;
-    }
+		if (isset($this->libraries[''])) {
+			$library = $this->libraries[$lib_key];
+		} else {
+			$library = new Zotero_Library(
+				$config['library_type'],
+				$config['library_id'],
+				$config['library_slug']
+			);
 
-    public function get_items($config, $total_item_limit = -1) {
-        $library = $this->get_server_connection($config);
+			$this->libraries[$lib_key] = $library;
+		}
+		return $library;
+	}
 
-        $per_request_limit = 100;
+	public function get_items($config, $total_item_limit = -1) {
+		$library = $this->get_server_connection($config);
 
-        $params = array(
-            'order' => 'title',
-            'limit' => $per_request_limit,
-            'collectionKey' => $config['collection_key'],
-            'content' => 'json,bib',
-        );
+		$per_request_limit = 100;
 
-        $more_items = true;
-        $fetched_items_count = 0;
-        $offset = 0;
-        $items = array();
+		$params = array(
+			'order' => 'title',
+			'limit' => $per_request_limit,
+			'collectionKey' => $config['collection_key'],
+			'content' => 'json,bib',
+		);
 
-        while (($fetched_items_count < $total_item_limit || $total_item_limit == -1)
-               && $more_items) {
-            $fetched_items = $library->fetchItemsTop(
-                array_merge($params, array('start'=>$offset))
-            );
-            $items = array_merge($items, $fetched_items);
-            $fetched_items_count += count($fetched_items);
-            $offset = $fetched_items_count;
+		$more_items = true;
+		$fetched_items_count = 0;
+		$offset = 0;
+		$items = array();
 
-            if(!isset($library->getLastFeed()->links['next'])){
-                $more_items = false;
-            }
-        }
-        return $items;
-    }
+		while (($fetched_items_count < $total_item_limit || $total_item_limit == -1)
+			   && $more_items) {
+			$fetched_items = $library->fetchItemsTop(
+				array_merge($params, array('start'=>$offset))
+			);
+			$items = array_merge($items, $fetched_items);
+			$fetched_items_count += count($fetched_items);
+			$offset = $fetched_items_count;
 
-    public function find_creator($creator) {
-        $args = array(
-            'meta_query' => array(
-                'relation' => 'AND',
-            ),
-        );
+			if(!isset($library->getLastFeed()->links['next'])){
+				$more_items = false;
+			}
+		}
+		return $items;
+	}
 
-        if (isset($creator['firstName'])) {
-            $args['meta_query'][] = array(
-                'key'     => 'first_name',
-                'value'   => $creator['firstName'],
-                'compare' => 'LIKE'
-            );
-        }
+	public function find_creator($creator) {
+		$args = array(
+			'meta_query' => array(
+				'relation' => 'AND',
+			),
+		);
 
-        $args['meta_query'][] = array(
-            'key'     => 'last_name',
-            'value'   => $creator['lastName'],
-            'compare' => 'LIKE'
-        );
+		if (isset($creator['firstName'])) {
+			$args['meta_query'][] = array(
+				'key'	  => 'first_name',
+				'value'	  => $creator['firstName'],
+				'compare' => 'LIKE'
+			);
+		}
 
-        $authors = get_users( $args );
-        return reset( $authors );
-    }
+		$args['meta_query'][] = array(
+			'key'	  => 'last_name',
+			'value'	  => $creator['lastName'],
+			'compare' => 'LIKE'
+		);
 
-    public function add_guest_author( $creator ) {
-        global $coauthors_plus;
+		$authors = get_users( $args );
+		return reset( $authors );
+	}
 
-        $user_id = null;
+	public function add_guest_author( $creator ) {
+		global $coauthors_plus;
 
-        $display_name = $creator['firstName'] . ' ' . $creator['lastName'];
-        $user_login = sanitize_title($display_name);
-        $args = array(
-            'display_name' => $display_name,
-            'user_login' => $user_login,
-            'first_name' => $creator['firstName'],
-            'last_name' => $creator['lastName'],
-        );
+		$user_id = null;
 
-        if (!empty( $coauthors_plus )) {
-            $user_id = $coauthors_plus->guest_authors->create( $args );
-            return $user_login;
-        } else {
-            $args['user_pass'] = wp_generate_password();
-            $user_id = wp_insert_user( $args );
-            $users = get_users( array( 'include' => array($user_id) ) );
-            $user = reset($users);
-            return $user->user_nicename;
-        }
-    }
+		$display_name = $creator['firstName'] . ' ' . $creator['lastName'];
+		$user_login = sanitize_title($display_name);
+		$args = array(
+			'display_name' => $display_name,
+			'user_login' => $user_login,
+			'first_name' => $creator['firstName'],
+			'last_name' => $creator['lastName'],
+		);
 
-    public function get_or_create_wp_author($creator) {
-        $author_nicename = null;
+		if (!empty( $coauthors_plus )) {
+			$user_id = $coauthors_plus->guest_authors->create( $args );
+			return $user_login;
+		} else {
+			$args['user_pass'] = wp_generate_password();
+			$user_id = wp_insert_user( $args );
+			$users = get_users( array( 'include' => array($user_id) ) );
+			$user = reset($users);
+			return $user->user_nicename;
+		}
+	}
 
-        $author = $this->find_creator($creator);
-        if (!empty($author)) { // use existing author
-            $author_nicename = $author->user_nicename;
-        } else { // create a guest author
-            $author_nicename = $this->add_guest_author( $creator );
-        }
-        return $author_nicename;
-    }
+	public function get_or_create_wp_author($creator) {
+		$author_nicename = null;
 
-    public function get_wp_authors_for($item) {
-        $authors = array();
-        foreach ($item->creators as $creator) {
-            if ($creator['creatorType'] == 'author') {
-                $authors[] = $this->get_or_create_wp_author($creator);
-            }
-        }
-        return $authors;
-    }
+		$author = $this->find_creator($creator);
+		if (!empty($author)) { // use existing author
+			$author_nicename = $author->user_nicename;
+		} else { // create a guest author
+			$author_nicename = $this->add_guest_author( $creator );
+		}
+		return $author_nicename;
+	}
 
-    public function get_areas_for( $item ) {
-        $areas = array();
-        foreach ($item->apiObject['tags'] as $tag_obj) {
-            $area = $tag_obj['tag'];
-            if ( isset( $this->research_areas[$area] ) ) {
-                $key = $this->research_areas[$area];
-                $areas[$key] = array($area);
-            }
-        }
-        return $areas;
-    }
+	public function get_wp_authors_for($item) {
+		$authors = array();
+		foreach ($item->creators as $creator) {
+			if ($creator['creatorType'] == 'author') {
+				$authors[] = $this->get_or_create_wp_author($creator);
+			}
+		}
+		return $authors;
+	}
+	public function get_areas_for( $item ) {
+		$areas = array();
+		foreach ($item->apiObject['tags'] as $tag_obj) {
+			$area = $tag_obj['tag'];
+			if ( isset( $this->research_areas[$area] ) ) {
+				$key = $this->research_areas[$area];
+				$areas[$key] = array($area);
+			}
+		}
+		return $areas;
+	}
 
-    public function commaify( $list ) {
-        switch (count( $list ) ) {
-        case 0:
-            return $list;
-            break;
-        case 1:
-            return $list[0];
-            break;
-        case 2:
-            return implode(" and ", $list);
-            break;
-        default:
-            $last = 'and ' . end( $list );
-            array_splice( $list, -1, 1, $last );
-            return implode(', ', $list);
-        }
-    }
+	public function get_categories_for( $item ) {
+		$categories = array();
+		foreach ($item->apiObject['tags'] as $tag_obj) {
+			$cat = $tag_obj['tag'];
+			if ( isset( $this->categories[$cat] ) ) {
+				$categories[] = $this->categories[$cat];
+			}
+		}
+		return $categories;
+	}
 
-    public function get_editors_for( $item ) {
-        $editors = array();
-        foreach ($item->creators as $creator) {
-            if ($creator['creatorType'] == 'editor') {
-                $editors[] = $creator['firstName'] . ' ' . $creator['lastName'];
-            }
-        }
-        if ( count( $editors ) > 0 ) {
-            return $this->commaify( $editors );
-        } else {
-            return false;
-        }
-    }
+	public function commaify( $list ) {
+		switch (count( $list ) ) {
+		case 0:
+			return $list;
+			break;
+		case 1:
+			return $list[0];
+			break;
+		case 2:
+			return implode(" and ", $list);
+			break;
+		default:
+			$last = 'and ' . end( $list );
+			array_splice( $list, -1, 1, $last );
+			return implode(', ', $list);
+		}
+	}
 
-    public function reformat_citation( $citation ) {
-        return preg_replace("/>[^.<&]+\. /", ">", $citation);
-    }
+	public function get_editors_for( $item ) {
+		$editors = array();
+		foreach ($item->creators as $creator) {
+			if ($creator['creatorType'] == 'editor') {
+				$editors[] = $creator['firstName'] . ' ' . $creator['lastName'];
+			}
+		}
+		if ( count( $editors ) > 0 ) {
+			return $this->commaify( $editors );
+		} else {
+			return false;
+		}
+	}
 
-    public function convert_to_posts($items) {
-        $posts = array();
-        foreach ($items as $item) {
-            $areas = $this->get_areas_for( $item );
-            $post = array(
-                'title' => $item->title,
-                'authors' => $this->get_wp_authors_for($item),
-                'dateUpdated' => $item->dateUpdated,
-                'meta' => array(
-                    'wpcf-date' => $item->year,
-                    'wpcf-zotero-key' => $item->itemKey,
-                    'wpcf-citation' => $this->reformat_citation( $item->bibContent ),
-                    'wpcf-research-areas' => $areas,
-                ),
-            );
+	public function reformat_citation( $citation ) {
+		return preg_replace("/>[^.<&]+\. /", ">", $citation);
+	}
 
-            $editors = $this->get_editors_for( $item );
-            if ($editors) {
-                $post['meta']['wpcf-editors'] = $editors;
-            }
+	public function convert_to_posts($items) {
+		$posts = array();
+		foreach ($items as $item) {
+			$areas = $this->get_areas_for( $item );
+			$post = array(
+				'title' => $item->title,
+				'authors' => $this->get_wp_authors_for($item),
+				'dateUpdated' => $item->dateUpdated,
+				'meta' => array(
+					'wpcf-date' => $item->year,
+					'wpcf-zotero-key' => $item->itemKey,
+					'wpcf-citation' => $this->reformat_citation( $item->bibContent ),
+					'wpcf-research-areas' => $areas,
+				),
+			);
 
-            $api_obj = $item->apiObject;
-            foreach ($this->api_fields as $field=>$custom) {
-                if (isset($api_obj[$field])) {
-                    $post['meta'][$custom] = $api_obj[$field];
-                }
-            }
+			$editors = $this->get_editors_for( $item );
+			if ($editors) {
+				$post['meta']['wpcf-editors'] = $editors;
+			}
 
-            if ( isset( $api_obj['abstractNote'] ) ) {
-                $post['abstract'] = $api_obj['abstractNote'];
-            }
+			$api_obj = $item->apiObject;
+			foreach ($this->api_fields as $field=>$custom) {
+				if (isset($api_obj[$field])) {
+					$post['meta'][$custom] = $api_obj[$field];
+				}
+			}
 
-            $posts[] = $post;
-        }
-        return $posts;
-    }
+			if ( isset( $api_obj['abstractNote'] ) ) {
+				$post['abstract'] = $api_obj['abstractNote'];
+			}
 
-    private function get_by_zotero_key($zotero_key) {
-        $args = array(
-            'post_type' => 'publication',
-            'meta_key' => 'wpcf-zotero-key',
-            'meta_value' => $zotero_key,
-        );
+			$posts[] = $post;
+		}
+		return $posts;
+	}
 
-        $existing = get_posts( $args );
-        if (count($existing) == 1) {
-            return reset($existing);
-        }
-    }
+	private function get_by_zotero_key($zotero_key) {
+		$args = array(
+			'post_type' => 'publication',
+			'meta_key' => 'wpcf-zotero-key',
+			'meta_value' => $zotero_key,
+		);
 
-    private function do_update_post_meta($post_id, $post_item) {
-        foreach ($post_item['meta'] as $key=>$value) {
-            update_post_meta($post_id, $key, $value);
-        }
-    }
+		$existing = get_posts( $args );
+		if (count($existing) == 1) {
+			return reset($existing);
+		}
+	}
 
-    private function do_add_coauthors($post_id, $post_item) {
-        global $coauthors_plus;
+	private function do_update_post_meta($post_id, $post_item) {
+		foreach ($post_item['meta'] as $key=>$value) {
+			update_post_meta($post_id, $key, $value);
+		}
+	}
 
-        if (!empty($coauthors_plus)) {
-            $coauthors_plus->add_coauthors($post_id, $post_item['authors']);
-        } else {
-            $author = $post_item['authors'][0];
-            $user = get_user_by( 'slug', $author );
-            wp_update_post( array(
-                'ID' => $post_id,
-                'post_author' => $user->ID,
-            ) );
-        }
-    }
+	private function do_add_coauthors($post_id, $post_item) {
+		global $coauthors_plus;
 
-    public function create_posts($posts) {
-        foreach ($posts as $post_item) {
-            $zotero_key = $post_item['meta']['wpcf-zotero-key'];
-            $existing = $this->get_by_zotero_key( $zotero_key );
-            if ($existing) {
-                if ($existing->modified > $post_item['dateUpdated']) {
-                    // don't alter if Zotero entry is outdated
-                } else {
-                    wp_update_post( array(
-                        'ID' => $existing->ID,
-                        'post_content' => $post_item['abstract'],
-                    ) );
+		if (!empty($coauthors_plus)) {
+			$coauthors_plus->add_coauthors($post_id, $post_item['authors']);
+		} else {
+			$author = $post_item['authors'][0];
+			$user = get_user_by( 'slug', $author );
+			wp_update_post( array(
+				'ID' => $post_id,
+				'post_author' => $user->ID,
+			) );
+		}
+	}
 
-                    $this->do_update_post_meta($existing->ID, $post_item);
-                }
-            } else {
-                $args = array(
-                    'post_type' => 'publication',
-                    'post_name' => sanitize_title( $post_item['title'] ),
-                    'post_title' => $post_item['title'],
-                    'post_status' => 'publish',
-                    'post_content' => $post_item['abstract'],
-                    'post_excerpt' => '',
-                );
-                $post_id = wp_insert_post( $args );
-                $this->do_update_post_meta($post_id, $post_item);
-                $this->do_add_coauthors($post_id, $post_item);
-            }
-        }
-    }
+	public function create_posts($posts) {
+		foreach ($posts as $post_item) {
+			$zotero_key = $post_item['meta']['wpcf-zotero-key'];
+			$existing = $this->get_by_zotero_key( $zotero_key );
+			if ($existing) {
+				if ($existing->modified > $post_item['dateUpdated']) {
+					// don't alter if Zotero entry is outdated
+				} else {
+					wp_update_post( array(
+						'ID' => $existing->ID,
+						'post_content' => $post_item['abstract'],
+					) );
 
-    public function sync( $research_areas_field = null ) {
-        $this->set_research_areas( $research_areas_field );
-        $config = get_option( 'wpzs_settings' );
-        if (!empty($config)) {
-            $items = $this->get_items($config);
-            $post_items = $this->convert_to_posts($items);
-            $this->create_posts($post_items);
-        }
-    }
+					$this->do_update_post_meta($existing->ID, $post_item);
+				}
+			} else {
+				$args = array(
+					'post_type' => 'publication',
+					'post_name' => sanitize_title( $post_item['title'] ),
+					'post_title' => $post_item['title'],
+					'post_status' => 'publish',
+					'post_content' => $post_item['abstract'],
+					'post_excerpt' => '',
+				);
+				$post_id = wp_insert_post( $args );
+				$this->do_update_post_meta($post_id, $post_item);
+				$this->do_add_coauthors($post_id, $post_item);
+			}
+		}
+	}
+
+	public function sync( $research_areas_field = null ) {
+		$this->set_research_areas( $research_areas_field );
+		$this->set_categories();
+		$config = get_option( 'wpzs_settings' );
+		if (!empty($config)) {
+			$items = $this->get_items($config);
+			$post_items = $this->convert_to_posts($items);
+			$this->create_posts($post_items);
+		}
+	}
 }
 
 global $WP_Zotero_Sync_Plugin;

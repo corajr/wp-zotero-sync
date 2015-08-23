@@ -148,6 +148,10 @@ class ApiTest extends WP_UnitTestCase {
         $this->assertEquals( $expected_areas, $areas );
     }
 
+	function test_categories() {
+        global $WP_Zotero_Sync_Plugin;
+	}
+
     function test_convert_items_to_posts() {
         global $WP_Zotero_Sync_Plugin;
         $items = $this->get_items();

@@ -159,8 +159,7 @@ class ApiTest extends WP_UnitTestCase {
 		$items = $this->get_items();
 		$categories = $WP_Zotero_Sync_Plugin->get_categories_for( $items[0] );
 		$this->assertEquals( 1, count( $categories ) );
-		$expected_categories = array(
-		);
+		$expected_categories = array( '826' );
 		$this->assertEquals( $expected_categories, $categories );
 	}
 
@@ -175,6 +174,7 @@ class ApiTest extends WP_UnitTestCase {
 		$this->assertEquals( 'ZHT8VRSH', $article['meta']['wpcf-zotero-key'] );
 		$this->assertEquals( '2009', $article['meta']['wpcf-date'] );
 		$this->assertEquals( 'Policy and Society', $article['meta']['wpcf-journal'] );
+		$this->assertEquals( array('826'), $article['categories'] );
 		$this->assertStringStartsWith( 'This paper analyzes', $article['abstract'] );
 
 		$this->assertArrayNotHasKey( 'wpcf-editors', $article['meta'] );
@@ -251,6 +251,10 @@ class ApiTest extends WP_UnitTestCase {
 
 		$areas = maybe_unserialize( $meta['wpcf-research-areas'][0] );
 		$this->assertEquals( $expected_areas,  $areas );
+
+		$categories = wp_get_post_categories( $example->ID );
+
+		$this->assertEquals( array( '826' ), $categories );
 
 	}
 }

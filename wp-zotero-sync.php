@@ -271,16 +271,16 @@ class WP_Zotero_Sync_Plugin {
 	public function convert_to_posts($items) {
 		$posts = array();
 		foreach ($items as $item) {
-			$areas = $this->get_areas_for( $item );
 			$post = array(
 				'title' => $item->title,
 				'authors' => $this->get_wp_authors_for($item),
 				'dateUpdated' => $item->dateUpdated,
+				'categories' => $this->get_categories_for( $item ),
 				'meta' => array(
 					'wpcf-date' => $item->year,
 					'wpcf-zotero-key' => $item->itemKey,
 					'wpcf-citation' => $this->reformat_citation( $item->bibContent ),
-					'wpcf-research-areas' => $areas,
+					'wpcf-research-areas' => $this->get_areas_for( $item ),
 				),
 			);
 

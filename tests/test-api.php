@@ -155,10 +155,9 @@ class ApiTest extends WP_UnitTestCase {
 		global $WP_Zotero_Sync_Plugin;
 		$wp_categories = $this->get_categories_stored();
 		$WP_Zotero_Sync_Plugin->set_categories( $wp_categories );
-		print_r($wp_categories);
 
 		$items = $this->get_items();
-		$categories = $WP_Zotero_Sync_Plugin->get_categories_for( $items[5] );
+		$categories = $WP_Zotero_Sync_Plugin->get_categories_for( $items[0] );
 		$this->assertEquals( 1, count( $categories ) );
 		$expected_categories = array(
 		);

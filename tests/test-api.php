@@ -270,7 +270,9 @@ class ApiTest extends WP_UnitTestCase {
 
 		$categories = wp_get_post_categories( $example->ID );
 
-		$this->assertEquals( array( 265 ), $categories );
-
+		$cat_ID = 265;
+		$this->assertEquals( array( $cat_ID ), $categories );
+		$category = get_category($cat_ID);
+		$this->assertEquals('Research Articles', $category->name);
 	}
 }

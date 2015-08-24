@@ -364,6 +364,12 @@ class WP_Zotero_Sync_Plugin {
 					'post_excerpt' => '',
 				);
 				$post_id = wp_insert_post( $args );
+				if ($post_item['categories']) {
+					$term_taxonomy_ids = wp_set_object_terms( $post_id,  $post_item['categories'], 'category' );
+					if ( is_wp_error( $term_taxonomy_ids ) ) {
+						echo "Warning: failed to set terms on post " . $post_id . "\n";
+					}
+				}
 				$this->do_update_post_meta($post_id, $post_item);
 				$this->do_add_coauthors($post_id, $post_item);
 			}

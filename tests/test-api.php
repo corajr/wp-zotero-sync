@@ -28,6 +28,8 @@ class ApiTest extends WP_UnitTestCase {
 			$user = $this->factory->user->create_and_get( $args );
 			$this->users[$args['last_name']] = $user->user_nicename;
 		}
+
+		$this->categories = $this->create_categories();
 	}
 
 	function get_config() {
@@ -56,9 +58,15 @@ class ApiTest extends WP_UnitTestCase {
 		return unserialize( file_get_contents( 'tests/fixture_fields.php' ) );
 	}
 
-	function get_categories_stored() {
-		return unserialize( file_get_contents( 'tests/fixture_categories.php' ) );
+	function create_categories() {
+		$categories = unserialize( file_get_contents( 'tests/fixture_categories.php' ) );
+		foreach ($categories as $category) {
+			echo $category->name . "\n";
+			$this->factory->category->create( array( 'name' => $category->name ));
+		}
+		return get_categories();
 	}
+
 	function test_get_items_from_api() {
 		global $WP_Zotero_Sync_Plugin;
 		$items = $this->get_items();
@@ -153,14 +161,17 @@ class ApiTest extends WP_UnitTestCase {
 
 	function test_categories() {
 		global $WP_Zotero_Sync_Plugin;
-		$wp_categories = $this->get_categories_stored();
+		$wp_categories = get_categories();
+		print_r($wp_categories);
 		$WP_Zotero_Sync_Plugin->set_categories( $wp_categories );
 
 		$items = $this->get_items();
 		$categories = $WP_Zotero_Sync_Plugin->get_categories_for( $items[0] );
 		$this->assertEquals( 1, count( $categories ) );
-		$expected_categories = array( '826' );
-		$this->assertEquals( $expected_categories, $categories );
+		$cat_id = $categories[0];
+		$cat = get_category($cat_id);
+		$cat_name = $cat ? $cat->name : null;
+		$this->assertEquals( 'Research Articles', $cat_name );
 	}
 
 	function test_convert_items_to_posts() {

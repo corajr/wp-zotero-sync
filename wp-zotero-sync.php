@@ -80,10 +80,10 @@ class WP_Zotero_Sync_Plugin {
 
 	public function set_categories( $wp_categories = null ) {
 		if (empty($wp_categories)) {
-			$wp_categories = get_categories();
+			$wp_categories = get_categories( array( 'hide_empty' => false));
 		}
 		foreach ($wp_categories as $category) {
-			$this->categories[$category->name] = $category->term_id;
+			$this->categories[$category->name] = intval($category->cat_ID);
 		}
 	}
 

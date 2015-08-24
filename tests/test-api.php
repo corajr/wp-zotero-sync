@@ -170,6 +170,8 @@ class ApiTest extends WP_UnitTestCase {
 		$items = $this->get_items();
 		$categories = $WP_Zotero_Sync_Plugin->get_categories_for( $items[0] );
 		$this->assertEquals( 1, count( $categories ) );
+		$this->assertTrue( is_int($categories[0]) );
+		// Must be an integer for setting categories to work
 
 		$cat_id = $categories[0];
 		$cat = get_category($cat_id);
@@ -268,7 +270,7 @@ class ApiTest extends WP_UnitTestCase {
 
 		$categories = wp_get_post_categories( $example->ID );
 
-		$this->assertEquals( array( '274' ), $categories );
+		$this->assertEquals( array( 265 ), $categories );
 
 	}
 }

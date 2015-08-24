@@ -78,8 +78,10 @@ class WP_Zotero_Sync_Plugin {
 		$this->research_areas = $areas;
 	}
 
-	public function set_categories() {
-		$wp_categories = get_categories();
+	public function set_categories( $wp_categories = null ) {
+		if (empty($wp_categories)) {
+			$wp_categories = get_categories();
+		}
 		foreach ($wp_categories as $category) {
 			$this->categories[$category->name] = $category->term_id;
 		}

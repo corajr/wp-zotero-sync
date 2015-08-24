@@ -56,6 +56,9 @@ class ApiTest extends WP_UnitTestCase {
 		return unserialize( file_get_contents( 'tests/fixture_fields.php' ) );
 	}
 
+	function get_categories_stored() {
+		return unserialize( file_get_contents( 'tests/fixture_categories.php' ) );
+	}
 	function test_get_items_from_api() {
 		global $WP_Zotero_Sync_Plugin;
 		$items = $this->get_items();
@@ -150,6 +153,10 @@ class ApiTest extends WP_UnitTestCase {
 
 	function test_categories() {
 		global $WP_Zotero_Sync_Plugin;
+		$wp_categories = $this->get_categories_stored();
+		$WP_Zotero_Sync_Plugin->set_categories( $wp_categories );
+		print_r($wp_categories);
+
 		$items = $this->get_items();
 		$categories = $WP_Zotero_Sync_Plugin->get_categories_for( $items[5] );
 		$this->assertEquals( 1, count( $categories ) );

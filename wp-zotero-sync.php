@@ -349,7 +349,7 @@ class WP_Zotero_Sync_Plugin {
 				} else {
 					wp_update_post( array(
 						'ID' => $existing->ID,
-						'post_content' => $post_item['abstract'],
+						'post_excerpt' => $post_item['abstract'],
 					) );
 
 					$this->do_update_post_meta($existing->ID, $post_item);
@@ -360,8 +360,8 @@ class WP_Zotero_Sync_Plugin {
 					'post_name' => sanitize_title( $post_item['title'] ),
 					'post_title' => $post_item['title'],
 					'post_status' => 'publish',
-					'post_content' => $post_item['abstract'],
-					'post_excerpt' => '',
+					'post_excerpt' => $post_item['abstract'],
+					'post_content' => '',
 				);
 				$post_id = wp_insert_post( $args );
 				if ($post_item['categories']) {

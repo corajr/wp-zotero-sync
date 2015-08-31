@@ -242,7 +242,7 @@ class ApiTest extends WP_UnitTestCase {
 		$example = $publications[0];
 
 		$this->assertEquals( 'A lab of their own: Genomic sovereignty as postcolonial science policy', $example->post_title );
-		$this->assertStringStartsWith( 'This paper analyzes', $example->post_content );
+		$this->assertStringStartsWith( 'This paper analyzes', $example->post_excerpt );
 		$author = get_user_by( 'id', $example->post_author );
 		$this->assertEquals( $this->users['Benjamin'], $author->user_nicename );
 	}

@@ -1,7 +1,7 @@
 <?php
 
 define("LIVE_API", false);
-define("NUM_ITEMS", 21);
+define("NUM_ITEMS", 22);
 
 class ApiTest extends WP_UnitTestCase {
 	public $users = array();
@@ -67,6 +67,19 @@ class ApiTest extends WP_UnitTestCase {
 					die(print_r($cat_id, true));
 				}
 			}
+		}
+	}
+
+	function test_get_subcollections_from_api() {
+		global $WP_Zotero_Sync_Plugin;
+		if (LIVE_API) {
+			$config = $this->get_config();
+			$library = $WP_Zotero_Sync_Plugin->get_server_connection($config);
+
+			$collections = $WP_Zotero_Sync_Plugin->get_sub_collections($library, $config['collection_key']);
+
+			$this->assertEquals( 1, count($collections));
+			$this->assertEquals( array('FCSUBFSM'), $collections );
 		}
 	}
 
@@ -270,7 +283,7 @@ class ApiTest extends WP_UnitTestCase {
 
 		$categories = wp_get_post_categories( $example->ID );
 
-		$cat_ID = 265;
+		$cat_ID = 292;
 		$this->assertEquals( array( $cat_ID ), $categories );
 		$category = get_category($cat_ID);
 		$this->assertEquals('Research Articles', $category->name);

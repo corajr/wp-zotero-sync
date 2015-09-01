@@ -87,7 +87,7 @@ class WP_Zotero_Sync_Plugin {
 		}
 	}
 
-	private function get_server_connection($config) {
+	public function get_server_connection($config) {
 		$lib_key = $config['library_type'] . $config['library_id'] . $config['collection_key'];
 
 		if (isset($this->libraries[''])) {
@@ -104,7 +104,7 @@ class WP_Zotero_Sync_Plugin {
 		return $library;
 	}
 
-	public function get_items($config, $total_item_limit = -1) {
+	public function get_items($config, $total_item_limit = -1, $recursive = true) {
 		$library = $this->get_server_connection($config);
 
 		$per_request_limit = 100;
@@ -116,12 +116,56 @@ class WP_Zotero_Sync_Plugin {
 			'content' => 'json,bib',
 		);
 
-		$more_items = true;
-		$fetched_items_count = 0;
-		$offset = 0;
 		$items = array();
 
-		while (($fetched_items_count < $total_item_limit || $total_item_limit == -1)
+		$this->fetch_items_into(
+			$items,
+			$library,
+			array_merge($params, array('collectionKey' => $config['collection_key'])),
+			$total_item_limit
+		);
+
+		if ($recursive) {
+			$sub_collections = $this->get_sub_collections($library, $config['collection_key']);
+			foreach ($sub_collections as $sub_collection) {
+				$this->fetch_items_into(
+					$items,
+					$library,
+					array_merge($params, array('collectionKey' => $sub_collection)),
+					$total_item_limit
+				);
+			}
+		}
+
+		return $items;
+	}
+
+	public function get_sub_collections(&$library, $collection_key) {
+		$collection_keys = array();
+		$collections = $library->fetchCollections(
+			array(
+				'collectionKey' => $collection_key,
+				'content' =>'json',
+			)
+		);
+		if (count($collections)){
+			foreach ($collections as $collection) {
+				$key = $collection->collectionKey;
+				if ($key != $collection_key) {
+					$collection_keys[] = $key;
+				}
+			}
+		}
+		return $collection_keys;
+	}
+
+	public function fetch_items_into(&$items, &$library, $params, $total_item_limit = -1) {
+		$more_items = true;
+		$already_fetched = count($items);
+		$fetched_items_count = 0;
+		$offset = 0;
+
+		while (($already_fetched + $fetched_items_count < $total_item_limit || $total_item_limit == -1)
 			   && $more_items) {
 			$fetched_items = $library->fetchItemsTop(
 				array_merge($params, array('start'=>$offset))
@@ -134,7 +178,6 @@ class WP_Zotero_Sync_Plugin {
 				$more_items = false;
 			}
 		}
-		return $items;
 	}
 
 	public function find_creator($creator) {

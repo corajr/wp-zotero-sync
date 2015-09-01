@@ -2991,7 +2991,7 @@ class Zotero_Library
     public $useLibraryAsContainer = true;
     public $libraryVersion = 0;
     protected $_lastResponse = null;
-    protected $_lastFeed = null;
+    public $_lastFeed = null;
     protected $_cacheResponses = false;
     protected $_cachettl = 0;
     protected $_cachePrefix = 'libZotero';

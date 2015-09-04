@@ -293,6 +293,23 @@ class WP_Zotero_Sync_Plugin {
 		}
 	}
 
+	function convert_date($date) {
+		$dt = false;
+		if (strlen($date) == 4) {
+			$dt = new DateTime();
+			$dt->setDate(intval($date), 1, 1);
+			$dt->setTime(0, 0);
+		} else {
+			$time = strtotime($date);
+			if ($time) {
+				$dt = new DateTime();
+				$dt->setTimestamp($time);
+			}
+		}
+
+		return $dt ? $dt->getTimestamp() : false;
+	}
+
 	public function get_editors_for( $item ) {
 		$editors = array();
 		foreach ($item->creators as $creator) {
@@ -320,7 +337,8 @@ class WP_Zotero_Sync_Plugin {
 				'dateUpdated' => $item->dateUpdated,
 				'categories' => $this->get_categories_for( $item ),
 				'meta' => array(
-					'wpcf-date' => $item->year,
+					'wpcf-year' => $item->year,
+					'wpcf-date' => $this->convert_date($item->apiObject['date']),
 					'wpcf-zotero-key' => $item->itemKey,
 					'wpcf-citation' => $this->reformat_citation( $item->bibContent ),
 					'wpcf-research-areas' => $this->get_areas_for( $item ),

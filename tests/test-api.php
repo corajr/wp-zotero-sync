@@ -127,6 +127,21 @@ class ApiTest extends WP_UnitTestCase {
 		$this->assertEquals('A, B, and C', $res3);
 	}
 
+	function test_convert_date() {
+		global $WP_Zotero_Sync_Plugin;
+
+		$date1 = $WP_Zotero_Sync_Plugin->convert_date('2014');
+		$expected1 = '2014-01-01T00:00:00+00:00';
+		$this->assertEquals($expected1, gmdate('c', $date1));
+
+		$date2 = $WP_Zotero_Sync_Plugin->convert_date('May 29, 2014');
+		$expected2 = '2014-05-29T00:00:00+00:00';
+		$this->assertEquals($expected2, gmdate('c', $date2));
+
+		$invalid = $WP_Zotero_Sync_Plugin->convert_date('201');
+		$this->assertEquals(false, $invalid);
+	}
+
 	function check_authors($item, $last_names) {
 		global $WP_Zotero_Sync_Plugin;
 
@@ -201,7 +216,10 @@ class ApiTest extends WP_UnitTestCase {
 		$this->assertEquals( 'A lab of their own: Genomic sovereignty as postcolonial science policy', $article['title'] );
 		$this->assertEquals( '2015-07-12T19:41:00Z', $article['dateUpdated'] );
 		$this->assertEquals( 'ZHT8VRSH', $article['meta']['wpcf-zotero-key'] );
-		$this->assertEquals( '2009', $article['meta']['wpcf-date'] );
+		$this->assertEquals( '2009', $article['meta']['wpcf-year'] );
+
+		$date = gmdate('c', $article['meta']['wpcf-date']);
+		$this->assertEquals( '2009-01-01T00:00:00+00:00', $date);
 		$this->assertEquals( 'Policy and Society', $article['meta']['wpcf-journal'] );
 		$this->assertEquals( 1, count($article['categories']) );
 		$this->assertStringStartsWith( 'This paper analyzes', $article['abstract'] );
@@ -283,9 +301,8 @@ class ApiTest extends WP_UnitTestCase {
 
 		$categories = wp_get_post_categories( $example->ID );
 
-		$cat_ID = 292;
+		$cat = get_category_by_slug('research-articles');
+		$cat_ID = $cat->term_id;
 		$this->assertEquals( array( $cat_ID ), $categories );
-		$category = get_category($cat_ID);
-		$this->assertEquals('Research Articles', $category->name);
 	}
 }

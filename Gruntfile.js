@@ -18,6 +18,13 @@ module.exports = function( grunt ) {
 			}
 		},
 
+    bump: {
+      options: {
+        files: ['package.json', 'wp-zotero-sync.php'],
+        commitFiles: ['package.json', 'wp-zotero-sync.php'],
+      },
+    },
+
 		wp_readme_to_markdown: {
 			your_target: {
 				files: {
@@ -45,6 +52,7 @@ module.exports = function( grunt ) {
 
 	grunt.loadNpmTasks( 'grunt-wp-i18n' );
 	grunt.loadNpmTasks( 'grunt-wp-readme-to-markdown' );
+	grunt.loadNpmTasks( 'grunt-bump' );
 	grunt.registerTask( 'i18n', ['addtextdomain', 'makepot'] );
 	grunt.registerTask( 'readme', ['wp_readme_to_markdown']);
 

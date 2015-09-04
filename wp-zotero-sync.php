@@ -337,8 +337,8 @@ class WP_Zotero_Sync_Plugin {
 				'dateUpdated' => $item->dateUpdated,
 				'categories' => $this->get_categories_for( $item ),
 				'meta' => array(
-					'wpcf-year' => $item->year,
-					'wpcf-date' => $this->convert_date($item->apiObject['date']),
+					'wpcf-publication-year' => $item->year,
+					'wpcf-publication-date' => $this->convert_date($item->apiObject['date']),
 					'wpcf-zotero-key' => $item->itemKey,
 					'wpcf-citation' => $this->reformat_citation( $item->bibContent ),
 					'wpcf-research-areas' => $this->get_areas_for( $item ),

@@ -216,10 +216,11 @@ class ApiTest extends WP_UnitTestCase {
 		$this->assertEquals( 'A lab of their own: Genomic sovereignty as postcolonial science policy', $article['title'] );
 		$this->assertEquals( '2015-07-12T19:41:00Z', $article['dateUpdated'] );
 		$this->assertEquals( 'ZHT8VRSH', $article['meta']['wpcf-zotero-key'] );
-		$this->assertEquals( '2009', $article['meta']['wpcf-year'] );
 
-		$date = gmdate('c', $article['meta']['wpcf-date']);
+		$this->assertEquals( '2009', $article['meta']['wpcf-publication-year'] );
+		$date = gmdate('c', $article['meta']['wpcf-publication-date']);
 		$this->assertEquals( '2009-01-01T00:00:00+00:00', $date);
+
 		$this->assertEquals( 'Policy and Society', $article['meta']['wpcf-journal'] );
 		$this->assertEquals( 1, count($article['categories']) );
 		$this->assertStringStartsWith( 'This paper analyzes', $article['abstract'] );

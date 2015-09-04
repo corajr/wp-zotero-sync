@@ -22,6 +22,7 @@ module.exports = function( grunt ) {
       options: {
         files: ['package.json', 'wp-zotero-sync.php'],
         commitFiles: ['package.json', 'wp-zotero-sync.php'],
+        pushTo: 'origin',
       },
     },
 

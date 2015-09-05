@@ -93,7 +93,7 @@ class WP_Zotero_Sync_Plugin {
 		if (isset($this->libraries[''])) {
 			$library = $this->libraries[$lib_key];
 		} else {
-			$library = new Zotero_Library(
+			$library = new \Zotero\Library(
 				$config['library_type'],
 				$config['library_id'],
 				$config['library_slug']
@@ -174,7 +174,8 @@ class WP_Zotero_Sync_Plugin {
 			$fetched_items_count += count($fetched_items);
 			$offset = $fetched_items_count;
 
-			if(!isset($library->getLastFeed()->links['next'])){
+			$links = $library->getLastResponse()->linkHeaders();
+			if(!isset($links['next'])){
 				$more_items = false;
 			}
 		}
@@ -254,7 +255,7 @@ class WP_Zotero_Sync_Plugin {
 	}
 	public function get_areas_for( $item ) {
 		$areas = array();
-		foreach ($item->apiObject['tags'] as $tag_obj) {
+		foreach ($item->get('tags') as $tag_obj) {
 			$area = $tag_obj['tag'];
 			if ( isset( $this->research_areas[$area] ) ) {
 				$key = $this->research_areas[$area];
@@ -266,7 +267,7 @@ class WP_Zotero_Sync_Plugin {
 
 	public function get_categories_for( $item ) {
 		$categories = array();
-		foreach ($item->apiObject['tags'] as $tag_obj) {
+		foreach ($item->get('tags') as $tag_obj) {
 			$cat = $tag_obj['tag'];
 			if ( isset( $this->categories[$cat] ) ) {
 				$categories[] = $this->categories[$cat];
@@ -338,7 +339,7 @@ class WP_Zotero_Sync_Plugin {
 				'categories' => $this->get_categories_for( $item ),
 				'meta' => array(
 					'wpcf-publication-year' => $item->year,
-					'wpcf-publication-date' => $this->convert_date($item->apiObject['date']),
+					'wpcf-publication-date' => $this->convert_date($item->apiObj['date']),
 					'wpcf-zotero-key' => $item->itemKey,
 					'wpcf-citation' => $this->reformat_citation( $item->bibContent ),
 					'wpcf-research-areas' => $this->get_areas_for( $item ),
@@ -350,7 +351,7 @@ class WP_Zotero_Sync_Plugin {
 				$post['meta']['wpcf-editors'] = $editors;
 			}
 
-			$api_obj = $item->apiObject;
+			$api_obj = $item->apiObj;
 			foreach ($this->api_fields as $field=>$custom) {
 				if (isset($api_obj[$field])) {
 					$post['meta'][$custom] = $api_obj[$field];

@@ -25,29 +25,50 @@ class ApcCache
     public function __construct(){
         if(!extension_loaded('apc')){
             if(!extension_loaded('apcu')){
-                throw new \Zotero\Exception('APC not loaded');
-            }
+				if (!function_exists('wp_cache_add')) {
+					throw new \Zotero\Exception('APC not loaded and no wp_cache exists');
+				}
+			}
         }
     }
     
     public function add($key, $val, $ttl=0){
-        return apc_add($key, $val, $ttl);
+        return wp_cache_add($key, $val, false, $ttl);
     }
     
     public function store($key, $val, $ttl=0){
-        return apc_store($key, $val, $ttl);
+        return wp_cache_set($key, $val, false, $ttl);
     }
     
     public function delete($key){
-        return apc_delete($key);
+        return wp_cache_delete($key);
     }
     
     public function fetch($key, &$success){
-        return apc_fetch($key, $success);
+		$obj = wp_cache_get($key);
+		if ($obj) {
+			$success = true;
+			return $obj;
+		} else {
+			$success = false;
+			return false;
+		}
     }
     
     public function exists($keys){
-        return apc_exists($keys);
+		$found = null;
+		if (is_scalar($keys)) {
+			$obj = wp_cache_get($keys, '', false, $found);
+			return $found !== false;
+		} else {
+			foreach ($keys as $key) {
+				$obj = wp_cache_get($key, '', false, $found);
+				if ($found === false) {
+					return false;
+				}
+			}
+			return true;
+		}
     }
 }
 

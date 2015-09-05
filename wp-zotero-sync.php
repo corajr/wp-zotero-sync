@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: WP Zotero Sync
-Version: 0.1.3
+Version: 0.1.4
 Description: Syncs Zotero items into a custom "Publications" post type.
 Author: Cora Johnson-Roberson
 Author URI: http://www.corajr.com

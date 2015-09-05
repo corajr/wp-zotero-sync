@@ -1,6 +1,6 @@
 {
   "name": "wp-zotero-sync",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "main": "Gruntfile.js",
   "author": "Cora Johnson-Roberson",
   "devDependencies": {

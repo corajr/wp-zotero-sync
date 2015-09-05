@@ -23,14 +23,10 @@ class ApcCache
     public $prefix = 'LibZotero';
     
     public function __construct(){
-        if(!extension_loaded('apc')){
-            if(!extension_loaded('apcu')){
-				if (!function_exists('wp_cache_add')) {
-					throw new \Zotero\Exception('APC not loaded and no wp_cache exists');
-				}
-			}
-        }
-    }
+		if (!function_exists('wp_cache_add')) {
+			throw new \Zotero\Exception('No wp_cache_ functions available');
+		}
+	}
     
     public function add($key, $val, $ttl=0){
         return wp_cache_add($key, $val, false, $ttl);

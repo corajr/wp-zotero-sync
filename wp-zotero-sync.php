@@ -307,7 +307,6 @@ class WP_Zotero_Sync_Plugin {
 				$dt->setTimestamp($time);
 			}
 		}
-
 		return $dt ? $dt->getTimestamp() : false;
 	}
 
@@ -332,14 +331,18 @@ class WP_Zotero_Sync_Plugin {
 	public function convert_to_posts($items) {
 		$posts = array();
 		foreach ($items as $item) {
+			$meta = $item->apiObj['meta'];
+			$date = isset($meta['parsedDate']) ? $meta['parsedDate'] : false;
+			$year = $date ? substr($date, 0, 4) : null;
+			$timestamp = $date ? $this->convert_date($date) : null;
 			$post = array(
 				'title' => $item->title,
 				'authors' => $this->get_wp_authors_for($item),
-				'dateUpdated' => $item->dateUpdated,
+				'dateUpdated' => $item->dateModified,
 				'categories' => $this->get_categories_for( $item ),
 				'meta' => array(
-					'wpcf-publication-year' => $item->year,
-					'wpcf-publication-date' => $this->convert_date($item->apiObj['date']),
+					'wpcf-publication-year' => $year,
+					'wpcf-publication-date' => $timestamp,
 					'wpcf-zotero-key' => $item->itemKey,
 					'wpcf-citation' => $this->reformat_citation( $item->bibContent ),
 					'wpcf-research-areas' => $this->get_areas_for( $item ),
@@ -355,11 +358,15 @@ class WP_Zotero_Sync_Plugin {
 			foreach ($this->api_fields as $field=>$custom) {
 				if (isset($api_obj[$field])) {
 					$post['meta'][$custom] = $api_obj[$field];
+				} else if (isset($api_obj['meta'][$field])) {
+					$post['meta'][$custom] = $api_obj['meta'][$field];
+				} else if (isset($api_obj['data'][$field])) {
+					$post['meta'][$custom] = $api_obj['data'][$field];
 				}
 			}
 
-			if ( isset( $api_obj['abstractNote'] ) ) {
-				$post['abstract'] = $api_obj['abstractNote'];
+			if ( isset( $api_obj['data']['abstractNote'] ) ) {
+				$post['abstract'] = $api_obj['data']['abstractNote'];
 			}
 
 			$posts[] = $post;

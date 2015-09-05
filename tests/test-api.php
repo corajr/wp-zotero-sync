@@ -129,15 +129,12 @@ class ApiTest extends WP_UnitTestCase {
 
 	function test_convert_date() {
 		global $WP_Zotero_Sync_Plugin;
-
 		$date1 = $WP_Zotero_Sync_Plugin->convert_date('2014');
 		$expected1 = '2014-01-01T00:00:00+00:00';
 		$this->assertEquals($expected1, gmdate('c', $date1));
-
 		$date2 = $WP_Zotero_Sync_Plugin->convert_date('May 29, 2014');
 		$expected2 = '2014-05-29T00:00:00+00:00';
 		$this->assertEquals($expected2, gmdate('c', $date2));
-
 		$invalid = $WP_Zotero_Sync_Plugin->convert_date('201');
 		$this->assertEquals(false, $invalid);
 	}

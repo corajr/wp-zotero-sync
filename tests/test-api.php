@@ -54,10 +54,6 @@ class ApiTest extends WP_UnitTestCase {
 		return $items;
 	}
 
-	function get_research_areas_field() {
-		return unserialize( file_get_contents( 'tests/fixture_fields.php' ) );
-	}
-
 	function create_categories() {
 		$categories = unserialize( file_get_contents( 'tests/fixture_categories.php' ) );
 		foreach ($categories as $category) {
@@ -170,23 +166,6 @@ class ApiTest extends WP_UnitTestCase {
 		$this->check_authors($items[18], array('Belcher', 'Kleiner'));
 	}
 
-	function test_research_areas() {
-		global $WP_Zotero_Sync_Plugin;
-		$field = $this->get_research_areas_field();
-		$WP_Zotero_Sync_Plugin->set_research_areas( $field );
-
-		$items = $this->get_items();
-		$areas = $WP_Zotero_Sync_Plugin->get_areas_for( $items[0] );
-
-		$this->assertEquals( 2, count( $areas ) );
-
-		$expected_areas = array(
-			'wpcf-fields-checkboxes-option-8aae55f870d165de229c4244c7c0cb43-1' => array("Post-Colonialization"),
-			'wpcf-fields-checkboxes-option-7909242e2a2efa6de8880164ebd29a75-1' => array("Participatory Science"),
-		);
-		$this->assertEquals( $expected_areas, $areas );
-	}
-
 	function test_categories() {
 		global $WP_Zotero_Sync_Plugin;
 		$wp_categories = get_categories( array( 'hide_empty' => false ) );
@@ -281,21 +260,13 @@ class ApiTest extends WP_UnitTestCase {
 
 		update_option( 'wpzs_settings', $this->get_config() );
 
-		$WP_Zotero_Sync_Plugin->sync( $this->get_research_areas_field() );
+		$WP_Zotero_Sync_Plugin->sync();
 		$publications = $this->get_publications();
 
 		$this->assertEquals( NUM_ITEMS, count($publications) );
 
 		$example = $publications[0];
 		$meta = get_post_meta( $example->ID );
-
-		$expected_areas = array(
-			'wpcf-fields-checkboxes-option-8aae55f870d165de229c4244c7c0cb43-1' => array("Post-Colonialization"),
-			'wpcf-fields-checkboxes-option-7909242e2a2efa6de8880164ebd29a75-1' => array("Participatory Science"),
-		);
-
-		$areas = maybe_unserialize( $meta['wpcf-research-areas'][0] );
-		$this->assertEquals( $expected_areas,  $areas );
 
 		$categories = wp_get_post_categories( $example->ID );
 

@@ -25,7 +25,6 @@ class WP_Zotero_Sync_Plugin {
 		'publisher' => 'wpcf-publisher',
 	);
 
-	private $research_areas = array();
 	private $categories = array();
 
 	/**
@@ -60,22 +59,6 @@ class WP_Zotero_Sync_Plugin {
 				)
 			);
 		}
-	}
-
-	public function set_research_areas( $field = null ) {
-		$areas = array();
-
-		if ( empty( $field ) && function_exists( 'wpcf_admin_fields_get_field' ) ) {
-			$field = wpcf_admin_fields_get_field( 'research-areas' );
-		}
-
-		if ( !empty( $field ) ) {
-			foreach ($field['data']['options'] as $key=>$value) {
-				$areas[$value['title']] = $key;
-			}
-		}
-
-		$this->research_areas = $areas;
 	}
 
 	public function set_categories( $wp_categories = null ) {
@@ -253,17 +236,6 @@ class WP_Zotero_Sync_Plugin {
 		}
 		return $authors;
 	}
-	public function get_areas_for( $item ) {
-		$areas = array();
-		foreach ($item->get('tags') as $tag_obj) {
-			$area = $tag_obj['tag'];
-			if ( isset( $this->research_areas[$area] ) ) {
-				$key = $this->research_areas[$area];
-				$areas[$key] = array($area);
-			}
-		}
-		return $areas;
-	}
 
 	public function get_categories_for( $item ) {
 		$categories = array();
@@ -345,7 +317,6 @@ class WP_Zotero_Sync_Plugin {
 					'wpcf-publication-date' => $timestamp,
 					'wpcf-zotero-key' => $item->itemKey,
 					'wpcf-citation' => $this->reformat_citation( $item->bibContent ),
-					'wpcf-research-areas' => $this->get_areas_for( $item ),
 				),
 			);
 
@@ -445,8 +416,7 @@ class WP_Zotero_Sync_Plugin {
 		}
 	}
 
-	public function sync( $research_areas_field = null ) {
-		$this->set_research_areas( $research_areas_field );
+	public function sync() {
 		$this->set_categories();
 		$config = get_option( 'wpzs_settings' );
 		if (!empty($config)) {

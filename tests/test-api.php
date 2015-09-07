@@ -22,6 +22,10 @@ class ApiTest extends WP_UnitTestCase {
 				'first_name' => 'Chika',
 				'last_name' => 'Okeke-Agulu',
 			),
+			array(
+				'first_name' => 'Anne Anlin',
+				'last_name' => 'Cheng',
+			),
 		);
 
 		foreach ($user_args as $args) {
@@ -160,10 +164,11 @@ class ApiTest extends WP_UnitTestCase {
 		global $WP_Zotero_Sync_Plugin;
 		$items = $this->get_items();
 
-		$this->check_authors($items[0], array('Benjamin'));
-		$this->check_authors($items[1], array('Belcher'));
-		$this->check_authors($items[2], array('Okeke-Agulu'));
-		$this->check_authors($items[18], array('Belcher', 'Kleiner'));
+		$this->check_authors($items[0], array('Cheng'));
+		$this->check_authors($items[1], array('Benjamin'));
+		$this->check_authors($items[2], array('Belcher'));
+		$this->check_authors($items[3], array('Okeke-Agulu'));
+		$this->check_authors($items[23], array('Belcher', 'Kleiner'));
 	}
 
 	function test_categories() {
@@ -172,7 +177,7 @@ class ApiTest extends WP_UnitTestCase {
 		$WP_Zotero_Sync_Plugin->set_categories( $wp_categories );
 
 		$items = $this->get_items();
-		$categories = $WP_Zotero_Sync_Plugin->get_categories_for( $items[0] );
+		$categories = $WP_Zotero_Sync_Plugin->get_categories_for( $items[1] );
 		$this->assertEquals( 1, count( $categories ) );
 		$this->assertTrue( is_int($categories[0]) );
 		// Must be an integer for setting categories to work
@@ -188,7 +193,7 @@ class ApiTest extends WP_UnitTestCase {
 		$items = $this->get_items();
 
 		$post_items = $WP_Zotero_Sync_Plugin->convert_to_posts( $items );
-		$article = $post_items[0];
+		$article = $post_items[1];
 		$this->assertEquals( 'A lab of their own: Genomic sovereignty as postcolonial science policy', $article['title'] );
 		$this->assertEquals( '2015-07-12T19:41:00Z', $article['dateUpdated'] );
 		$this->assertEquals( 'ZHT8VRSH', $article['meta']['wpcf-zotero-key'] );
@@ -206,11 +211,11 @@ class ApiTest extends WP_UnitTestCase {
 
 		$this->assertArrayHasKey( 'wpcf-citation', $article['meta'] );
 
-		$book = $post_items[1];
+		$book = $post_items[2];
 		$this->assertEquals( "Abyssinia's Samuel Johnson: Ethiopian Thought in the Making of an English Author", $book['title'] );
 		$this->assertEquals( 'Oxford University Press', $book['meta']['wpcf-publisher'] );
 
-		$book_section = $post_items[2];
+		$book_section = $post_items[3];
 		$this->assertEquals( 'SIQEK7CP', $book_section['meta']['wpcf-zotero-key'] );
 		$this->assertEquals( 'Art History and Globalization', $book_section['title'] );
 		$this->assertEquals( 'Is Art History Global', $book_section['meta']['wpcf-journal'] );
@@ -218,7 +223,7 @@ class ApiTest extends WP_UnitTestCase {
 		$this->assertEquals( 1, count($book_section['authors']) );
 
 		// Don't include authors in citation format.
-		$joint_authored = $post_items[18];
+		$joint_authored = $post_items[23];
 		$this->assertNotContains( 'Belcher, Wendy', $joint_authored['meta']['wpcf-citation'] );
 		$this->assertNotContains( 'Michael Kleiner', $joint_authored['meta']['wpcf-citation'] );
 	}
@@ -247,7 +252,7 @@ class ApiTest extends WP_UnitTestCase {
 
 		$this->assertEquals( NUM_ITEMS, count($publications) );
 
-		$example = $publications[0];
+		$example = $publications[1];
 
 		$this->assertEquals( 'A lab of their own: Genomic sovereignty as postcolonial science policy', $example->post_title );
 		$this->assertStringStartsWith( 'This paper analyzes', $example->post_excerpt );
@@ -265,7 +270,7 @@ class ApiTest extends WP_UnitTestCase {
 
 		$this->assertEquals( NUM_ITEMS, count($publications) );
 
-		$example = $publications[0];
+		$example = $publications[1];
 		$meta = get_post_meta( $example->ID );
 
 		$categories = wp_get_post_categories( $example->ID );

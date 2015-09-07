@@ -25,6 +25,13 @@ class WP_Zotero_Sync_Plugin {
 		'publisher' => 'wpcf-publisher',
 	);
 
+	private $valid_author_types = array(
+		'author',
+		'contributor',
+		'guest',
+		'reviewedAuthor',
+	);
+
 	private $categories = array();
 
 	/**
@@ -179,11 +186,21 @@ class WP_Zotero_Sync_Plugin {
 			);
 		}
 
-		$args['meta_query'][] = array(
-			'key'	  => 'last_name',
-			'value'	  => $creator['lastName'],
-			'compare' => 'LIKE'
-		);
+		if (isset($creator['lastName'])) {
+			$args['meta_query'][] = array(
+				'key'	  => 'last_name',
+				'value'	  => $creator['lastName'],
+				'compare' => 'LIKE'
+			);
+		}
+
+		if (isset($creator['name'])) {
+			$args['meta_query'][] = array(
+				'key'	  => 'display_name',
+				'value'	  => $creator['name'],
+				'compare' => 'LIKE'
+			);
+		}
 
 		$authors = get_users( $args );
 		return reset( $authors );
@@ -194,7 +211,14 @@ class WP_Zotero_Sync_Plugin {
 
 		$user_id = null;
 
-		$display_name = $creator['firstName'] . ' ' . $creator['lastName'];
+		if (isset($creator['name'])) {
+			$display_name = $creator['name'];
+			$creator['firstName'] = '';
+			$creator['lastName'] = $creator['name'];
+		} else if (isset($creator['firstName'])) {
+			$display_name = $creator['firstName'] . ' ' . $creator['lastName'];
+		}
+
 		$user_login = sanitize_title($display_name);
 		$args = array(
 			'display_name' => $display_name,
@@ -229,11 +253,27 @@ class WP_Zotero_Sync_Plugin {
 
 	public function get_wp_authors_for($item) {
 		$authors = array();
-		foreach ($item->creators as $creator) {
-			if ($creator['creatorType'] == 'author') {
+
+		$valid_authors = array_filter($item->creators, function ($c) {
+			return in_array($c['creatorType'], $this->valid_author_types, true);
+		});
+
+		if ($valid_authors) {
+			foreach ($valid_authors as $creator) {
 				$authors[] = $this->get_or_create_wp_author($creator);
 			}
+		} else {
+			$editors = array_filter($item->creators, function ($c) {
+				return $c['creatorType'] == 'editor';
+			});
+
+			if ($editors) {
+				foreach ($editors as $creator) {
+					$authors[] = $this->get_or_create_wp_author($creator);
+				}
+			}
 		}
+
 		return $authors;
 	}
 
@@ -286,7 +326,11 @@ class WP_Zotero_Sync_Plugin {
 		$editors = array();
 		foreach ($item->creators as $creator) {
 			if ($creator['creatorType'] == 'editor') {
-				$editors[] = $creator['firstName'] . ' ' . $creator['lastName'];
+				if (isset($creator['lastName'])) {
+					$editors[] = $creator['firstName'] . ' ' . $creator['lastName'];
+				} else if (isset($creator['name'])) {
+					$editors[] = $creator['name'];
+				}
 			}
 		}
 		if ( count( $editors ) > 0 ) {

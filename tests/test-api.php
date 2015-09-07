@@ -1,7 +1,7 @@
 <?php
 
 define("LIVE_API", false);
-define("NUM_ITEMS", 22);
+define("NUM_ITEMS", 34);
 
 class ApiTest extends WP_UnitTestCase {
 	public $users = array();

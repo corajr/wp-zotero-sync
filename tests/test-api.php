@@ -228,13 +228,13 @@ class ApiTest extends WP_UnitTestCase {
 		$this->assertNotContains( 'Michael Kleiner', $joint_authored['meta']['wpcf-citation'] );
 	}
 
-	function get_publications() {
-		$args = array(
+	function get_publications($args = array()) {
+		$args = wp_parse_args($args, array(
 			'posts_per_page' => -1,
 			'post_type' => 'publication',
 			'order' => 'ASC',
 			'order_by' => 'ID',
-		);
+		));
 
 		$publications = get_posts( $args );
 		return $publications;
@@ -283,4 +283,46 @@ class ApiTest extends WP_UnitTestCase {
 		$this->assertEquals( array( $cat_ID ), $categories );
 	}
 
+	function get_publication_by_zotero_key($key) {
+		$args = array(
+			'meta_query' => array(
+				'key' => 'wpcf-zotero-key',
+				'value' => $key,
+			)
+		);
+
+		$pubs = $this->get_publications($args);
+
+		if ($pubs) {
+			return $pubs[0];
+		}
+	}
+
+	function test_sync_then_modify() {
+		global $WP_Zotero_Sync_Plugin;
+
+		update_option( 'wpzs_settings', $this->get_config() );
+
+		$items = $this->get_items();
+
+		if (LIVE_API) {
+			$WP_Zotero_Sync_Plugin->sync();
+		} else {
+			$WP_Zotero_Sync_Plugin->sync( $items );
+		}
+
+		$zot_key = $items[0]->itemKey;
+		$meta_key = 'wpcf-publication-year';
+		$expected = '1899';
+
+		$example = $this->get_publication_by_zotero_key($zot_key);
+		update_post_meta($example->ID, $meta_key, $expected);
+
+		$WP_Zotero_Sync_Plugin->sync( $items );
+
+		$updated_example = $this->get_publication_by_zotero_key($zot_key);
+		$actual = get_post_meta($updated_example->ID, $meta_key, true);
+
+		$this->assertEquals( $expected, $actual );
+	}
 }

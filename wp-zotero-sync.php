@@ -196,7 +196,7 @@ class WP_Zotero_Sync_Plugin {
 
 		if (isset($creator['name'])) {
 			$args['meta_query'][] = array(
-				'key'	  => 'display_name',
+				'key'	  => 'last_name',
 				'value'	  => $creator['name'],
 				'compare' => 'LIKE'
 			);

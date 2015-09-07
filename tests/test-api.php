@@ -265,18 +265,22 @@ class ApiTest extends WP_UnitTestCase {
 
 		update_option( 'wpzs_settings', $this->get_config() );
 
-		$WP_Zotero_Sync_Plugin->sync();
+		if (LIVE_API) {
+			$WP_Zotero_Sync_Plugin->sync();
+		} else {
+			$items = $this->get_items();
+			$WP_Zotero_Sync_Plugin->sync( $items );
+		}
 		$publications = $this->get_publications();
 
 		$this->assertEquals( NUM_ITEMS, count($publications) );
 
 		$example = $publications[1];
-		$meta = get_post_meta( $example->ID );
-
 		$categories = wp_get_post_categories( $example->ID );
 
 		$cat = get_category_by_slug('research-articles');
 		$cat_ID = $cat->term_id;
 		$this->assertEquals( array( $cat_ID ), $categories );
 	}
+
 }

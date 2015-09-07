@@ -460,11 +460,13 @@ class WP_Zotero_Sync_Plugin {
 		}
 	}
 
-	public function sync() {
+	public function sync( $items = null) {
 		$this->set_categories();
 		$config = get_option( 'wpzs_settings' );
 		if (!empty($config)) {
-			$items = $this->get_items($config);
+			if ($items == null) {
+				$items = $this->get_items($config);
+			}
 			$post_items = $this->convert_to_posts($items);
 			$this->create_posts($post_items);
 		}

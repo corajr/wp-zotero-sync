@@ -60,13 +60,13 @@ ABCDEFGH is the collection key.
 ## Screenshots ##
 
 ### 1. The Sync Settings page. ###
-![The Sync Settings page.](http://s.wordpress.org/extend/plugins/wp-zotero-sync/screenshot-1.png)
+![The Sync Settings page.](/assets/screenshot-1.png)
 
 ### 2. Publication posts as created by the plugin. ###
-![Publication posts as created by the plugin.](http://s.wordpress.org/extend/plugins/wp-zotero-sync/screenshot-2.png)
+![Publication posts as created by the plugin.](/assets/screenshot-2.png)
 
 ### 3. A sample publication. ###
-![A sample publication.](http://s.wordpress.org/extend/plugins/wp-zotero-sync/screenshot-3.png)
+![A sample publication.](/assets//screenshot-3.png)
 
 
 ## Changelog ##
